@@ -1,42 +1,74 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Coaching Management System</title>
+    <title>Coaching Management System</title>
 
-  <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
 
-  <main id="app"></main>
+    <main id="app"></main>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
 
-  <!-- Firebase configuration -->
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBNgVNueOI-hL3EUN0kIQwrkyLdzg_jpSM",
-      authDomain: "coaching-management-syst-f20cd.firebaseapp.com",
-      projectId: "coaching-management-syst-f20cd",
-      storageBucket: "coaching-management-syst-f20cd.firebasestorage.app",
-      messagingSenderId: "1086570055293",
-      appId: "1:1086570055293:web:076c0a0a03088137d75314"
-    };
+    <!-- =========================================
+         FIREBASE
+    ========================================== -->
 
-    firebase.initializeApp(firebaseConfig);
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-app-compat.js"></script>
 
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-  </script>
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-auth-compat.js"></script>
 
-  <!-- Our application -->
-  <script src="app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore-compat.js"></script>
+
+
+    <!-- =========================================
+         FIREBASE CONFIGURATION
+    ========================================== -->
+
+    <script>
+
+        const firebaseConfig = {
+
+            apiKey: "AIzaSyBNgVNueOI-hL3EUN0kIQwrkyLdzg_jpSM",
+
+            authDomain: "coaching-management-syst-f20cd.firebaseapp.com",
+
+            projectId: "coaching-management-syst-f20cd",
+
+            storageBucket: "coaching-management-syst-f20cd.firebasestorage.app",
+
+            messagingSenderId: "1086570055293",
+
+            appId: "1:1086570055293:web:076c0a0a03088137d75314"
+
+        };
+
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+
+
+        // Firebase Authentication
+        const auth = firebase.auth();
+
+
+        // Cloud Firestore
+        const db = firebase.firestore();
+
+    </script>
+
+
+    <!-- =========================================
+         COACHING MANAGEMENT SYSTEM
+    ========================================== -->
+
+    <script src="app.js"></script>
 
 </body>
+
 </html>
