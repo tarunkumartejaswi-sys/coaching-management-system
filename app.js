@@ -1,6 +1,6 @@
 /* =========================================================
    COACHING MANAGEMENT SYSTEM
-   COMPLETE APP.JS
+   STUDENT LOGIN + ROLE BASED DASHBOARDS
 ========================================================= */
 
 const studentsKey = "cms_students";
@@ -13,7 +13,7 @@ const feesKey = "cms_fees";
 
 
 /* =========================================================
-   DEFAULT DATA
+   DEFAULT STUDENTS
 ========================================================= */
 
 const defaultStudents = [
@@ -24,9 +24,12 @@ const defaultStudents = [
     className: "Class 12",
     batch: "Class 12 A",
     phone: "9876543210",
+    username: "rahul001",
+    password: "1234",
     fees: 12000,
     paid: 10000
   },
+
   {
     uid: "student_002",
     id: "S002",
@@ -34,9 +37,12 @@ const defaultStudents = [
     className: "Class 12",
     batch: "Class 12 A",
     phone: "9876543211",
+    username: "priya002",
+    password: "1234",
     fees: 12000,
     paid: 12000
   },
+
   {
     uid: "student_003",
     id: "S003",
@@ -44,11 +50,17 @@ const defaultStudents = [
     className: "Class 11",
     batch: "Class 11 B",
     phone: "9876543212",
+    username: "aman003",
+    password: "1234",
     fees: 10000,
     paid: 7000
   }
 ];
 
+
+/* =========================================================
+   DEFAULT TEACHERS
+========================================================= */
 
 const defaultTeachers = [
   {
@@ -57,12 +69,14 @@ const defaultTeachers = [
     subject: "Physics",
     batch: "Class 12 A"
   },
+
   {
     id: "T002",
     name: "Neha Singh",
     subject: "Chemistry",
     batch: "Class 12 A"
   },
+
   {
     id: "T003",
     name: "Amit Sharma",
@@ -71,6 +85,10 @@ const defaultTeachers = [
   }
 ];
 
+
+/* =========================================================
+   DEFAULT TESTS
+========================================================= */
 
 const defaultTests = [
   {
@@ -83,6 +101,7 @@ const defaultTests = [
     solution: "",
     results: {}
   },
+
   {
     id: "TEST002",
     name: "Chemistry Test 1",
@@ -96,6 +115,10 @@ const defaultTests = [
 ];
 
 
+/* =========================================================
+   DEFAULT HOMEWORK
+========================================================= */
+
 const defaultHomework = [
   {
     id: "HW001",
@@ -103,6 +126,7 @@ const defaultHomework = [
     title: "Numericals on Current Electricity",
     due: "2026-09-15"
   },
+
   {
     id: "HW002",
     subject: "Mathematics",
@@ -112,6 +136,10 @@ const defaultHomework = [
 ];
 
 
+/* =========================================================
+   DEFAULT NOTICES
+========================================================= */
+
 const defaultNotices = [
   {
     id: "N001",
@@ -119,6 +147,7 @@ const defaultNotices = [
     message: "Monthly tests will start from next week.",
     date: "2026-09-10"
   },
+
   {
     id: "N002",
     title: "Fee Reminder",
@@ -133,49 +162,79 @@ const defaultNotices = [
 ========================================================= */
 
 function escapeHTML(value) {
+
   return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+
 }
 
 
 function money(value) {
-  return "₹" + Number(value || 0).toLocaleString("en-IN");
+
+  return "₹" +
+    Number(value || 0)
+      .toLocaleString("en-IN");
+
 }
 
 
 function today() {
-  return new Date().toISOString().split("T")[0];
+
+  return new Date()
+    .toISOString()
+    .split("T")[0];
+
 }
 
 
 function makeUID(prefix) {
-  return prefix + "_" + Date.now() + "_" +
-    Math.random().toString(36).substring(2, 8);
+
+  return prefix +
+    "_" +
+    Date.now() +
+    "_" +
+    Math.random()
+      .toString(36)
+      .substring(2, 8);
+
 }
 
 
 function getData(key, fallback) {
-  const saved = localStorage.getItem(key);
+
+  const saved =
+    localStorage.getItem(key);
 
   if (!saved) {
     return fallback;
   }
 
   try {
+
     return JSON.parse(saved);
+
   } catch (error) {
+
     console.log(error);
+
     return fallback;
+
   }
+
 }
 
 
 function saveData(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
+
+  localStorage.setItem(
+    key,
+    JSON.stringify(data)
+  );
+
 }
 
 
@@ -185,48 +244,110 @@ function saveData(key, data) {
 
 function getStudents() {
 
-  let students = getData(
-    studentsKey,
-    defaultStudents
-  );
+  let students =
+    getData(
+      studentsKey,
+      defaultStudents
+    );
 
   let changed = false;
 
-  students = students.map(student => {
 
-    if (!student.uid) {
-      student.uid = makeUID("student");
-      changed = true;
-    }
+  students =
+    students.map(student => {
 
-    if (!student.className) {
-      student.className = student.batch || "";
-      changed = true;
-    }
+      if (!student.uid) {
 
-    if (student.fees === undefined) {
-      student.fees = 0;
-      changed = true;
-    }
+        student.uid =
+          makeUID("student");
 
-    if (student.paid === undefined) {
-      student.paid = 0;
-      changed = true;
-    }
+        changed = true;
 
-    return student;
-  });
+      }
+
+
+      if (!student.className) {
+
+        student.className =
+          student.batch || "";
+
+        changed = true;
+
+      }
+
+
+      if (student.fees === undefined) {
+
+        student.fees = 0;
+
+        changed = true;
+
+      }
+
+
+      if (student.paid === undefined) {
+
+        student.paid = 0;
+
+        changed = true;
+
+      }
+
+
+      /*
+         Give old students a username/password
+         if they don't already have one.
+      */
+
+      if (!student.username) {
+
+        student.username =
+          (
+            student.name
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, "")
+          ) +
+          student.id
+            .toLowerCase();
+
+        changed = true;
+
+      }
+
+
+      if (!student.password) {
+
+        student.password = "1234";
+
+        changed = true;
+
+      }
+
+
+      return student;
+
+    });
+
 
   if (changed) {
+
     saveStudents(students);
+
   }
 
+
   return students;
+
 }
 
 
 function saveStudents(students) {
-  saveData(studentsKey, students);
+
+  saveData(
+    studentsKey,
+    students
+  );
+
 }
 
 
@@ -235,15 +356,22 @@ function saveStudents(students) {
 ========================================================= */
 
 function getTeachers() {
+
   return getData(
     teachersKey,
     defaultTeachers
   );
+
 }
 
 
 function saveTeachers(teachers) {
-  saveData(teachersKey, teachers);
+
+  saveData(
+    teachersKey,
+    teachers
+  );
+
 }
 
 
@@ -253,43 +381,75 @@ function saveTeachers(teachers) {
 
 function getTests() {
 
-  let tests = getData(
-    testsKey,
-    defaultTests
-  );
+  let tests =
+    getData(
+      testsKey,
+      defaultTests
+    );
 
   let changed = false;
 
-  tests = tests.map(test => {
 
-    if (!test.results) {
-      test.results = {};
-      changed = true;
-    }
+  tests =
+    tests.map(test => {
 
-    if (test.questionPaper === undefined) {
-      test.questionPaper = "";
-      changed = true;
-    }
+      if (!test.results) {
 
-    if (test.solution === undefined) {
-      test.solution = "";
-      changed = true;
-    }
+        test.results = {};
 
-    return test;
-  });
+        changed = true;
+
+      }
+
+
+      if (
+        test.questionPaper ===
+        undefined
+      ) {
+
+        test.questionPaper = "";
+
+        changed = true;
+
+      }
+
+
+      if (
+        test.solution ===
+        undefined
+      ) {
+
+        test.solution = "";
+
+        changed = true;
+
+      }
+
+
+      return test;
+
+    });
+
 
   if (changed) {
+
     saveTests(tests);
+
   }
 
+
   return tests;
+
 }
 
 
 function saveTests(tests) {
-  saveData(testsKey, tests);
+
+  saveData(
+    testsKey,
+    tests
+  );
+
 }
 
 
@@ -298,74 +458,134 @@ function saveTests(tests) {
 ========================================================= */
 
 function getHomework() {
-  return getData(homeworkKey, defaultHomework);
+
+  return getData(
+    homeworkKey,
+    defaultHomework
+  );
+
 }
 
 
 function saveHomework(data) {
-  saveData(homeworkKey, data);
+
+  saveData(
+    homeworkKey,
+    data
+  );
+
 }
 
 
 function getNotices() {
-  return getData(noticesKey, defaultNotices);
+
+  return getData(
+    noticesKey,
+    defaultNotices
+  );
+
 }
 
 
 function saveNotices(data) {
-  saveData(noticesKey, data);
+
+  saveData(
+    noticesKey,
+    data
+  );
+
 }
 
 
 function getAttendance() {
-  return getData(attendanceKey, []);
+
+  return getData(
+    attendanceKey,
+    []
+  );
+
 }
 
 
 function saveAttendance(data) {
-  saveData(attendanceKey, data);
+
+  saveData(
+    attendanceKey,
+    data
+  );
+
 }
 
 
 function getFees() {
-  return getData(feesKey, []);
+
+  return getData(
+    feesKey,
+    []
+  );
+
 }
 
 
 function saveFees(data) {
-  saveData(feesKey, data);
+
+  saveData(
+    feesKey,
+    data
+  );
+
 }
 
 
 /* =========================================================
-   LOGIN
+   LOGIN PAGE
 ========================================================= */
 
 function loginPage() {
 
-  document.getElementById("app").innerHTML = `
+  document.getElementById(
+    "app"
+  ).innerHTML = `
 
     <div class="login-page">
 
       <div class="login-card">
 
-        <h1>🎓 Coaching Management</h1>
+        <h1>
+          🎓 Coaching Management
+        </h1>
 
         <p class="muted">
           Login to your account
         </p>
 
+
         <form onsubmit="login(event)">
 
-          <label>Role</label>
+          <label>
+            Login As
+          </label>
 
           <select id="loginRole">
-            <option value="admin">Admin</option>
-            <option value="teacher">Teacher</option>
-            <option value="student">Student</option>
+
+            <option value="admin">
+              Admin
+            </option>
+
+            <option value="teacher">
+              Teacher
+            </option>
+
+            <option value="student">
+              Student
+            </option>
+
           </select>
 
-          <label>Username</label>
+
+          <label>
+            Username
+          </label>
 
           <input
             id="username"
@@ -374,7 +594,10 @@ function loginPage() {
             required
           >
 
-          <label>Password</label>
+
+          <label>
+            Password
+          </label>
 
           <input
             id="password"
@@ -382,6 +605,7 @@ function loginPage() {
             placeholder="Enter password"
             required
           >
+
 
           <button
             type="submit"
@@ -392,57 +616,173 @@ function loginPage() {
 
         </form>
 
+
         <div class="login-info">
 
-          <p><b>Demo Login</b></p>
+          <p>
+            <b>Demo Accounts</b>
+          </p>
 
-          <p>Admin: admin / 1234</p>
-          <p>Teacher: teacher / 1234</p>
-          <p>Student: student / 1234</p>
+          <p>
+            Admin:
+            admin / 1234
+          </p>
+
+          <p>
+            Teacher:
+            teacher / 1234
+          </p>
+
+          <p>
+            Student Rahul:
+            rahul001 / 1234
+          </p>
+
+          <p>
+            Student Priya:
+            priya002 / 1234
+          </p>
+
+          <p>
+            Student Aman:
+            aman003 / 1234
+          </p>
 
         </div>
 
       </div>
 
     </div>
+
   `;
+
 }
 
+
+/* =========================================================
+   LOGIN
+========================================================= */
 
 function login(event) {
 
   event.preventDefault();
 
+
   const role =
-    document.getElementById("loginRole").value;
+    document.getElementById(
+      "loginRole"
+    ).value;
+
 
   const username =
-    document.getElementById("username").value.trim();
+    document.getElementById(
+      "username"
+    ).value.trim();
+
 
   const password =
-    document.getElementById("password").value.trim();
+    document.getElementById(
+      "password"
+    ).value.trim();
 
-  const valid =
-    (role === "admin" &&
-      username === "admin" &&
-      password === "1234") ||
 
-    (role === "teacher" &&
-      username === "teacher" &&
-      password === "1234") ||
+  /*
+     ADMIN LOGIN
+  */
 
-    (role === "student" &&
-      username === "student" &&
-      password === "1234");
+  if (
+    role === "admin" &&
+    username === "admin" &&
+    password === "1234"
+  ) {
 
-  if (!valid) {
-    alert("Invalid username or password.");
+    localStorage.setItem(
+      "cms_role",
+      "admin"
+    );
+
+    localStorage.removeItem(
+      "cms_student_uid"
+    );
+
+    app("admin");
+
     return;
+
   }
 
-  localStorage.setItem("cms_role", role);
 
-  app(role);
+  /*
+     TEACHER LOGIN
+  */
+
+  if (
+    role === "teacher" &&
+    username === "teacher" &&
+    password === "1234"
+  ) {
+
+    localStorage.setItem(
+      "cms_role",
+      "teacher"
+    );
+
+    localStorage.removeItem(
+      "cms_student_uid"
+    );
+
+    app("teacher");
+
+    return;
+
+  }
+
+
+  /*
+     STUDENT LOGIN
+  */
+
+  if (role === "student") {
+
+    const students =
+      getStudents();
+
+
+    const student =
+      students.find(
+        item =>
+          item.username === username &&
+          item.password === password
+      );
+
+
+    if (student) {
+
+      localStorage.setItem(
+        "cms_role",
+        "student"
+      );
+
+
+      localStorage.setItem(
+        "cms_student_uid",
+        student.uid
+      );
+
+
+      app("student");
+
+      return;
+
+    }
+
+  }
+
+
+  alert(
+    "Invalid username or password."
+  );
+
 }
 
 
@@ -452,77 +792,120 @@ function login(event) {
 
 function app(role) {
 
-  document.getElementById("app").innerHTML = `
+  document.getElementById(
+    "app"
+  ).innerHTML = `
 
     <div class="app-layout">
 
       <aside class="sidebar">
 
         <div class="brand">
+
           🎓
+
           <span>
             Coaching<br>
             Management
           </span>
+
         </div>
+
 
         <nav>
 
-          <button onclick="dashboard('${role}')">
+          <button
+            onclick="dashboard()"
+          >
             🏠 Dashboard
           </button>
 
-          <button onclick="studentsPage()">
-            👨‍🎓 Students
-          </button>
+
+          ${
+            role !== "student"
+              ? `
+                <button
+                  onclick="studentsPage()"
+                >
+                  👨‍🎓 Students
+                </button>
+              `
+              : ""
+          }
+
 
           ${
             role === "admin"
               ? `
-                <button onclick="teachersPage()">
+                <button
+                  onclick="teachersPage()"
+                >
                   👨‍🏫 Teachers
                 </button>
               `
               : ""
           }
 
-          <button onclick="testsPage()">
+
+          <button
+            onclick="testsPage()"
+          >
             ${
               role === "student"
-                ? "📊 Results"
+                ? "📊 My Results"
                 : "📝 Tests"
             }
           </button>
 
-          <button onclick="attendancePage()">
-            📅 Attendance
+
+          <button
+            onclick="attendancePage()"
+          >
+            📅 ${
+              role === "student"
+                ? "My Attendance"
+                : "Attendance"
+            }
           </button>
+
 
           ${
             role === "admin"
               ? `
-                <button onclick="feesPage()">
+                <button
+                  onclick="feesPage()"
+                >
                   💰 Fees
                 </button>
               `
               : ""
           }
 
-          <button onclick="homeworkPage()">
+
+          <button
+            onclick="homeworkPage()"
+          >
             📚 Homework
           </button>
 
-          <button onclick="noticesPage()">
+
+          <button
+            onclick="noticesPage()"
+          >
             📢 Notices
           </button>
 
-          <button onclick="logout()">
+
+          <button
+            onclick="logout()"
+          >
             🚪 Logout
           </button>
 
         </nav>
 
       </aside>
+
 
       <main class="main-content">
 
@@ -531,9 +914,187 @@ function app(role) {
       </main>
 
     </div>
+
   `;
 
-  dashboard(role);
+
+  dashboard();
+
+}
+
+
+/* =========================================================
+   GET CURRENT STUDENT
+========================================================= */
+
+function getCurrentStudent() {
+
+  const uid =
+    localStorage.getItem(
+      "cms_student_uid"
+    );
+
+  if (!uid) {
+    return null;
+  }
+
+
+  return getStudents().find(
+    student =>
+      student.uid === uid
+  );
+
+}
+
+
+/* =========================================================
+   STUDENT ATTENDANCE PERCENTAGE
+========================================================= */
+
+function getStudentAttendancePercentage(
+  studentUid
+) {
+
+  const records =
+    getAttendance().filter(
+      record =>
+        record.studentUid ===
+        studentUid
+    );
+
+
+  if (records.length === 0) {
+    return 0;
+  }
+
+
+  let present = 0;
+
+
+  records.forEach(record => {
+
+    if (
+      record.status === "Present" ||
+      record.status === "Late"
+    ) {
+
+      present++;
+
+    }
+
+  });
+
+
+  return (
+    present /
+    records.length
+  ) * 100;
+
+}
+
+
+/* =========================================================
+   STUDENT AVERAGE
+========================================================= */
+
+function getStudentAverage(
+  studentUid
+) {
+
+  const tests =
+    getTests();
+
+
+  let total = 0;
+  let count = 0;
+
+
+  tests.forEach(test => {
+
+    const result =
+      test.results &&
+      test.results[studentUid];
+
+
+    if (
+      result &&
+      result.present === true &&
+      result.marks !== "" &&
+      result.marks !== undefined
+    ) {
+
+      total +=
+        Number(result.marks) /
+        Number(test.total || 1) *
+        100;
+
+      count++;
+
+    }
+
+  });
+
+
+  if (count === 0) {
+    return 0;
+  }
+
+
+  return total / count;
+
+}
+
+
+/* =========================================================
+   STUDENT RANK
+========================================================= */
+
+function getStudentRank(
+  studentUid
+) {
+
+  const students =
+    getStudents();
+
+
+  const stats =
+    students.map(student => {
+
+      return {
+
+        uid: student.uid,
+
+        average:
+          getStudentAverage(
+            student.uid
+          )
+
+      };
+
+    });
+
+
+  stats.sort(
+    (a, b) =>
+      b.average -
+      a.average
+  );
+
+
+  const index =
+    stats.findIndex(
+      item =>
+        item.uid === studentUid
+    );
+
+
+  if (index === -1) {
+    return "-";
+  }
+
+
+  return index + 1;
+
 }
 
 
@@ -541,28 +1102,68 @@ function app(role) {
    DASHBOARD
 ========================================================= */
 
-function dashboard(role) {
+function dashboard() {
 
-  const students = getStudents();
-  const teachers = getTeachers();
+  const role =
+    localStorage.getItem(
+      "cms_role"
+    );
+
+
+  /*
+     STUDENT DASHBOARD
+  */
+
+  if (role === "student") {
+
+    studentDashboard();
+
+    return;
+
+  }
+
+
+  /*
+     ADMIN / TEACHER DASHBOARD
+  */
+
+  const students =
+    getStudents();
+
+  const teachers =
+    getTeachers();
+
 
   const collected =
     students.reduce(
       (sum, student) =>
-        sum + Number(student.paid || 0),
+        sum +
+        Number(
+          student.paid || 0
+        ),
       0
     );
+
 
   const total =
     students.reduce(
       (sum, student) =>
-        sum + Number(student.fees || 0),
+        sum +
+        Number(
+          student.fees || 0
+        ),
       0
     );
 
-  const pending = total - collected;
 
-  document.getElementById("view").innerHTML = `
+  const pending =
+    total -
+    collected;
+
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
 
     <div class="topbar">
 
@@ -572,9 +1173,7 @@ function dashboard(role) {
           ${
             role === "admin"
               ? "Admin Dashboard"
-              : role === "teacher"
-                ? "Teacher Dashboard"
-                : "Student Dashboard"
+              : "Teacher Dashboard"
           }
         </h1>
 
@@ -583,6 +1182,7 @@ function dashboard(role) {
         </p>
 
       </div>
+
 
       <div class="role-badge">
         ${role.toUpperCase()}
@@ -594,80 +1194,158 @@ function dashboard(role) {
     <div class="stats-grid">
 
       <div class="stat-card">
-        <div class="stat-icon">👨‍🎓</div>
-        <div>
-          <p>Total Students</p>
-          <h2>${students.length}</h2>
+
+        <div class="stat-icon">
+          👨‍🎓
         </div>
+
+        <div>
+
+          <p>
+            Total Students
+          </p>
+
+          <h2>
+            ${students.length}
+          </h2>
+
+        </div>
+
       </div>
 
 
       <div class="stat-card">
-        <div class="stat-icon">👨‍🏫</div>
-        <div>
-          <p>Teachers</p>
-          <h2>${teachers.length}</h2>
+
+        <div class="stat-icon">
+          👨‍🏫
         </div>
+
+        <div>
+
+          <p>
+            Teachers
+          </p>
+
+          <h2>
+            ${teachers.length}
+          </h2>
+
+        </div>
+
       </div>
 
 
-      <div class="stat-card">
-        <div class="stat-icon">💰</div>
-        <div>
-          <p>Fees Collected</p>
-          <h2>${money(collected)}</h2>
-        </div>
-      </div>
+      ${
+        role === "admin"
+          ? `
+
+            <div class="stat-card">
+
+              <div class="stat-icon">
+                💰
+              </div>
+
+              <div>
+
+                <p>
+                  Fees Collected
+                </p>
+
+                <h2>
+                  ${money(collected)}
+                </h2>
+
+              </div>
+
+            </div>
 
 
-      <div class="stat-card">
-        <div class="stat-icon">⏳</div>
-        <div>
-          <p>Pending Fees</p>
-          <h2>${money(pending)}</h2>
-        </div>
-      </div>
+            <div class="stat-card">
+
+              <div class="stat-icon">
+                ⏳
+              </div>
+
+              <div>
+
+                <p>
+                  Pending Fees
+                </p>
+
+                <h2>
+                  ${money(pending)}
+                </h2>
+
+              </div>
+
+            </div>
+
+          `
+          : ""
+      }
 
     </div>
 
 
     <div class="card">
 
-      <h2>⚡ Quick Actions</h2>
+      <h2>
+        ⚡ Quick Actions
+      </h2>
+
 
       <div class="quick-actions">
 
-        <button onclick="studentsPage()">
+        <button
+          onclick="studentsPage()"
+        >
           👨‍🎓 Students
         </button>
+
 
         ${
           role === "admin"
             ? `
-              <button onclick="teachersPage()">
+              <button
+                onclick="teachersPage()"
+              >
                 👨‍🏫 Teachers
               </button>
 
-              <button onclick="feesPage()">
+              <button
+                onclick="feesPage()"
+              >
                 💰 Fees
               </button>
             `
             : ""
         }
 
-        <button onclick="testsPage()">
+
+        <button
+          onclick="testsPage()"
+        >
           📝 Tests
         </button>
 
-        <button onclick="attendancePage()">
+
+        <button
+          onclick="attendancePage()"
+        >
           📅 Attendance
         </button>
 
-        <button onclick="homeworkPage()">
+
+        <button
+          onclick="homeworkPage()"
+        >
           📚 Homework
         </button>
 
-        <button onclick="noticesPage()">
+
+        <button
+          onclick="noticesPage()"
+        >
           📢 Notices
         </button>
 
@@ -678,17 +1356,612 @@ function dashboard(role) {
 
     <div class="card">
 
-      <h2>🕒 Recent Activity</h2>
+      <h2>
+        🕒 Recent Activity
+      </h2>
 
-      <p>✅ Student management active</p>
-      <p>📝 Test & result management active</p>
-      <p>📅 Attendance management active</p>
-      <p>💰 Fee management active</p>
-      <p>📚 Homework active</p>
-      <p>📢 Notice board active</p>
+      <p>
+        ✅ Student management active
+      </p>
+
+      <p>
+        📝 Test & result management active
+      </p>
+
+      <p>
+        📅 Attendance management active
+      </p>
+
+      <p>
+        💰 Fee management active
+      </p>
+
+      <p>
+        📚 Homework active
+      </p>
+
+      <p>
+        📢 Notice board active
+      </p>
 
     </div>
+
   `;
+
+}
+
+
+/* =========================================================
+   STUDENT DASHBOARD
+========================================================= */
+
+function studentDashboard() {
+
+  const student =
+    getCurrentStudent();
+
+
+  if (!student) {
+
+    logout();
+
+    return;
+
+  }
+
+
+  const pending =
+    Math.max(
+      0,
+      Number(student.fees || 0) -
+      Number(student.paid || 0)
+    );
+
+
+  const attendance =
+    getStudentAttendancePercentage(
+      student.uid
+    );
+
+
+  const average =
+    getStudentAverage(
+      student.uid
+    );
+
+
+  const rank =
+    getStudentRank(
+      student.uid
+    );
+
+
+  const tests =
+    getTests()
+      .filter(
+        test =>
+          test.date >= today()
+      )
+      .sort(
+        (a, b) =>
+          a.date.localeCompare(
+            b.date
+          )
+      );
+
+
+  const allTests =
+    getTests();
+
+
+  const completedResults =
+    allTests
+      .filter(test => {
+
+        const result =
+          test.results &&
+          test.results[student.uid];
+
+        return (
+          result &&
+          result.present === true &&
+          result.marks !== "" &&
+          result.marks !== undefined
+        );
+
+      })
+      .sort(
+        (a, b) =>
+          b.date.localeCompare(
+            a.date
+          )
+      );
+
+
+  const homework =
+    getHomework();
+
+
+  const notices =
+    getNotices()
+      .slice()
+      .reverse();
+
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
+
+    <div class="topbar">
+
+      <div>
+
+        <h1>
+          👋 Welcome, ${escapeHTML(student.name)}
+        </h1>
+
+        <p class="muted">
+          Student Dashboard
+        </p>
+
+      </div>
+
+
+      <div class="role-badge">
+        STUDENT
+      </div>
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>
+        👤 My Profile
+      </h2>
+
+      <div class="form-grid">
+
+        <div>
+          <p class="muted">
+            Student ID
+          </p>
+
+          <h3>
+            ${escapeHTML(student.id)}
+          </h3>
+        </div>
+
+
+        <div>
+          <p class="muted">
+            Class
+          </p>
+
+          <h3>
+            ${escapeHTML(student.className)}
+          </h3>
+        </div>
+
+
+        <div>
+          <p class="muted">
+            Batch
+          </p>
+
+          <h3>
+            ${escapeHTML(student.batch)}
+          </h3>
+        </div>
+
+
+        <div>
+          <p class="muted">
+            Username
+          </p>
+
+          <h3>
+            ${escapeHTML(student.username)}
+          </h3>
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          💰
+        </div>
+
+        <div>
+
+          <p>
+            Pending Fee
+          </p>
+
+          <h2>
+            ${money(pending)}
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          📅
+        </div>
+
+        <div>
+
+          <p>
+            Attendance
+          </p>
+
+          <h2>
+            ${attendance.toFixed(1)}%
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          📈
+        </div>
+
+        <div>
+
+          <p>
+            Average
+          </p>
+
+          <h2>
+            ${average.toFixed(1)}%
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          🏆
+        </div>
+
+        <div>
+
+          <p>
+            Current Rank
+          </p>
+
+          <h2>
+            #${rank}
+          </h2>
+
+        </div>
+
+      </div>
+
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>
+        📝 Upcoming Tests
+      </h2>
+
+
+      ${
+        tests.length === 0
+
+          ? `
+
+            <p class="muted">
+              No upcoming tests.
+            </p>
+
+          `
+
+          : `
+
+            <div class="table-wrap">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+
+                    <th>
+                      Test
+                    </th>
+
+                    <th>
+                      Subject
+                    </th>
+
+                    <th>
+                      Date
+                    </th>
+
+                    <th>
+                      Marks
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                  ${tests.slice(0, 5).map(test => `
+
+                    <tr>
+
+                      <td>
+                        ${escapeHTML(test.name)}
+                      </td>
+
+                      <td>
+                        ${escapeHTML(test.subject)}
+                      </td>
+
+                      <td>
+                        ${escapeHTML(test.date)}
+                      </td>
+
+                      <td>
+                        ${test.total}
+                      </td>
+
+                    </tr>
+
+                  `).join("")}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          `
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>
+        📊 Latest Result
+      </h2>
+
+
+      ${
+        completedResults.length === 0
+
+          ? `
+
+            <p class="muted">
+              No results published yet.
+            </p>
+
+          `
+
+          : `
+
+            <div class="table-wrap">
+
+              <table>
+
+                <thead>
+
+                  <tr>
+
+                    <th>
+                      Test
+                    </th>
+
+                    <th>
+                      Subject
+                    </th>
+
+                    <th>
+                      Date
+                    </th>
+
+                    <th>
+                      Marks
+                    </th>
+
+                    <th>
+                      Percentage
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                  ${completedResults.slice(0, 5).map(test => {
+
+                    const result =
+                      test.results[
+                        student.uid
+                      ];
+
+                    const percentage =
+                      Number(result.marks) /
+                      Number(test.total || 1) *
+                      100;
+
+
+                    return `
+
+                      <tr>
+
+                        <td>
+                          ${escapeHTML(test.name)}
+                        </td>
+
+                        <td>
+                          ${escapeHTML(test.subject)}
+                        </td>
+
+                        <td>
+                          ${escapeHTML(test.date)}
+                        </td>
+
+                        <td>
+                          ${result.marks}
+                          /
+                          ${test.total}
+                        </td>
+
+                        <td>
+                          <b>
+                            ${percentage.toFixed(2)}%
+                          </b>
+                        </td>
+
+                      </tr>
+
+                    `;
+
+                  }).join("")}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          `
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>
+        📚 Homework
+      </h2>
+
+
+      ${
+        homework.length === 0
+
+          ? `
+
+            <p class="muted">
+              No homework available.
+            </p>
+
+          `
+
+          : `
+
+            ${homework.slice(0, 5).map(item => `
+
+              <div class="card">
+
+                <h3>
+                  📚 ${escapeHTML(item.title)}
+                </h3>
+
+                <p>
+                  <b>
+                    Subject:
+                  </b>
+
+                  ${escapeHTML(item.subject)}
+                </p>
+
+                <p>
+                  <b>
+                    Due:
+                  </b>
+
+                  ${escapeHTML(item.due)}
+                </p>
+
+              </div>
+
+            `).join("")}
+
+          `
+      }
+
+    </div>
+
+
+    <div class="card">
+
+      <h2>
+        📢 Latest Notices
+      </h2>
+
+
+      ${
+        notices.length === 0
+
+          ? `
+
+            <p class="muted">
+              No notices available.
+            </p>
+
+          `
+
+          : `
+
+            ${notices.slice(0, 5).map(notice => `
+
+              <div class="card">
+
+                <h3>
+                  📢 ${escapeHTML(notice.title)}
+                </h3>
+
+                <p>
+                  ${escapeHTML(notice.message)}
+                </p>
+
+                <p class="muted">
+                  ${escapeHTML(notice.date)}
+                </p>
+
+              </div>
+
+            `).join("")}
+
+          `
+      }
+
+    </div>
+
+  `;
+
 }
 
 
@@ -699,15 +1972,31 @@ function dashboard(role) {
 function studentsPage() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
 
-  document.getElementById("view").innerHTML = `
+
+  if (role === "student") {
+
+    studentDashboard();
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
 
     <div class="topbar">
 
       <div>
 
-        <h1>Students</h1>
+        <h1>
+          Students
+        </h1>
 
         <p class="muted">
           Manage student records
@@ -715,19 +2004,14 @@ function studentsPage() {
 
       </div>
 
-      ${
-        role === "admin" || role === "teacher"
-          ? `
-            <button
-              class="primary"
-              onclick="addStudent()"
-              style="width:auto;margin-top:0"
-            >
-              ➕ Add Student
-            </button>
-          `
-          : ""
-      }
+
+      <button
+        class="primary"
+        onclick="addStudent()"
+        style="width:auto;margin-top:0"
+      >
+        ➕ Add Student
+      </button>
 
     </div>
 
@@ -739,157 +2023,283 @@ function studentsPage() {
         <thead>
 
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Class</th>
-            <th>Batch</th>
-            <th>Phone</th>
-            <th>Total Fees</th>
-            <th>Paid</th>
-            <th>Pending</th>
-            <th>Actions</th>
+
+            <th>
+              ID
+            </th>
+
+            <th>
+              Name
+            </th>
+
+            <th>
+              Class
+            </th>
+
+            <th>
+              Batch
+            </th>
+
+            <th>
+              Phone
+            </th>
+
+            <th>
+              Username
+            </th>
+
+            <th>
+              Total Fees
+            </th>
+
+            <th>
+              Paid
+            </th>
+
+            <th>
+              Pending
+            </th>
+
+            <th>
+              Actions
+            </th>
+
           </tr>
 
         </thead>
+
 
         <tbody id="studentTable"></tbody>
 
       </table>
 
     </div>
+
   `;
 
+
   renderStudents();
+
 }
 
 
 function renderStudents() {
 
   const table =
-    document.getElementById("studentTable");
+    document.getElementById(
+      "studentTable"
+    );
+
 
   if (!table) return;
 
-  const students = getStudents();
+
+  const students =
+    getStudents();
+
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
 
-  if (students.length === 0) {
-
-    table.innerHTML = `
-      <tr>
-        <td colspan="9" style="text-align:center">
-          No students found.
-        </td>
-      </tr>
-    `;
-
-    return;
-  }
 
   table.innerHTML =
-    students.map(student => {
+    students.map(student => `
 
-      const canEdit =
-        role === "admin" ||
-        role === "teacher";
+      <tr>
 
-      const canDelete =
-        role === "admin";
+        <td>
+          ${escapeHTML(student.id)}
+        </td>
 
-      return `
+        <td>
+          ${escapeHTML(student.name)}
+        </td>
 
-        <tr>
+        <td>
+          ${escapeHTML(student.className)}
+        </td>
 
-          <td>${escapeHTML(student.id)}</td>
+        <td>
+          ${escapeHTML(student.batch)}
+        </td>
 
-          <td>${escapeHTML(student.name)}</td>
+        <td>
+          ${escapeHTML(student.phone)}
+        </td>
 
-          <td>${escapeHTML(student.className)}</td>
+        <td>
+          <b>
+            ${escapeHTML(student.username)}
+          </b>
+        </td>
 
-          <td>${escapeHTML(student.batch)}</td>
+        <td>
+          ${money(student.fees)}
+        </td>
 
-          <td>${escapeHTML(student.phone)}</td>
+        <td>
+          ${money(student.paid)}
+        </td>
 
-          <td>${money(student.fees)}</td>
+        <td>
+          ${money(
+            Number(student.fees || 0) -
+            Number(student.paid || 0)
+          )}
+        </td>
 
-          <td>${money(student.paid)}</td>
+        <td>
 
-          <td>
-            ${money(
-              Number(student.fees || 0) -
-              Number(student.paid || 0)
-            )}
-          </td>
+          <button
+            class="action-btn"
+            onclick="editStudent('${student.uid}')"
+            title="Edit Student"
+          >
+            ✏️
+          </button>
 
-          <td>
 
-            ${
-              canEdit
-                ? `
-                  <button
-                    class="action-btn"
-                    onclick="editStudent('${student.uid}')"
-                    title="Edit Student"
-                  >
-                    ✏️
-                  </button>
-                `
-                : ""
-            }
+          ${
+            role === "admin"
+              ? `
 
-            ${
-              canDelete
-                ? `
-                  <button
-                    class="action-btn"
-                    onclick="deleteStudent('${student.uid}')"
-                    title="Delete Student"
-                  >
-                    🗑️
-                  </button>
-                `
-                : ""
-            }
+                <button
+                  class="action-btn"
+                  onclick="deleteStudent('${student.uid}')"
+                  title="Delete Student"
+                >
+                  🗑️
+                </button>
 
-          </td>
+              `
+              : ""
+          }
 
-        </tr>
-      `;
+        </td>
 
-    }).join("");
+      </tr>
+
+    `).join("");
+
 }
 
+
+/* =========================================================
+   ADD STUDENT
+========================================================= */
 
 function addStudent() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
+
 
   if (
     role !== "admin" &&
     role !== "teacher"
   ) {
-    alert("You do not have permission.");
+
+    alert(
+      "You do not have permission."
+    );
+
     return;
+
   }
 
-  const students = getStudents();
+
+  const students =
+    getStudents();
+
 
   const id =
     prompt(
       "Enter Student ID:",
       "S" +
-      String(students.length + 1).padStart(3, "0")
+      String(
+        students.length + 1
+      ).padStart(3, "0")
     );
+
 
   if (!id) return;
 
+
+  const cleanId =
+    id.trim().toUpperCase();
+
+
+  if (
+    students.some(
+      student =>
+        student.id.toUpperCase() ===
+        cleanId
+    )
+  ) {
+
+    alert(
+      "Student ID already exists."
+    );
+
+    return;
+
+  }
+
+
   const name =
-    prompt("Enter Student Name:");
+    prompt(
+      "Enter Student Name:"
+    );
+
 
   if (!name) return;
+
+
+  const username =
+    prompt(
+      "Create Student Username:"
+    );
+
+
+  if (!username) return;
+
+
+  const cleanUsername =
+    username
+      .trim()
+      .toLowerCase();
+
+
+  if (
+    students.some(
+      student =>
+        student.username &&
+        student.username.toLowerCase() ===
+        cleanUsername
+    )
+  ) {
+
+    alert(
+      "Username already exists. Please choose another."
+    );
+
+    return;
+
+  }
+
+
+  const password =
+    prompt(
+      "Create Student Password:"
+    );
+
+
+  if (!password) return;
+
 
   const className =
     prompt(
@@ -897,7 +2307,9 @@ function addStudent() {
       "Class 12"
     );
 
+
   if (!className) return;
+
 
   const batch =
     prompt(
@@ -905,12 +2317,18 @@ function addStudent() {
       "Class 12 A"
     );
 
+
   if (!batch) return;
 
+
   const phone =
-    prompt("Enter Phone Number:");
+    prompt(
+      "Enter Phone Number:"
+    );
+
 
   if (!phone) return;
+
 
   const fees =
     Number(
@@ -920,7 +2338,20 @@ function addStudent() {
       )
     );
 
-  if (isNaN(fees)) return;
+
+  if (
+    isNaN(fees) ||
+    fees < 0
+  ) {
+
+    alert(
+      "Enter valid fees."
+    );
+
+    return;
+
+  }
+
 
   const paid =
     Number(
@@ -930,59 +2361,115 @@ function addStudent() {
       )
     );
 
-  if (isNaN(paid)) return;
+
+  if (
+    isNaN(paid) ||
+    paid < 0 ||
+    paid > fees
+  ) {
+
+    alert(
+      "Enter valid paid amount."
+    );
+
+    return;
+
+  }
+
 
   students.push({
 
-    uid: makeUID("student"),
+    uid:
+      makeUID("student"),
 
-    id: id.trim().toUpperCase(),
+    id:
+      cleanId,
 
-    name: name.trim(),
+    name:
+      name.trim(),
 
-    className: className.trim(),
+    className:
+      className.trim(),
 
-    batch: batch.trim(),
+    batch:
+      batch.trim(),
 
-    phone: phone.trim(),
+    phone:
+      phone.trim(),
 
-    fees: fees,
+    username:
+      cleanUsername,
 
-    paid: paid
+    password:
+      password.trim(),
+
+    fees:
+      fees,
+
+    paid:
+      paid
 
   });
 
-  saveStudents(students);
+
+  saveStudents(
+    students
+  );
+
 
   renderStudents();
 
-  alert("Student added successfully! ✅");
+
+  alert(
+    "Student added successfully! ✅\n\n" +
+    "Username: " +
+    cleanUsername +
+    "\nPassword: " +
+    password.trim()
+  );
+
 }
 
+
+/* =========================================================
+   EDIT STUDENT
+========================================================= */
 
 function editStudent(uid) {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
+
 
   if (
     role !== "admin" &&
     role !== "teacher"
   ) {
+
     alert(
-      "You do not have permission to edit students."
+      "You do not have permission."
     );
+
     return;
+
   }
 
-  const students = getStudents();
+
+  const students =
+    getStudents();
+
 
   const student =
     students.find(
-      item => item.uid === uid
+      item =>
+        item.uid === uid
     );
 
+
   if (!student) return;
+
 
   const name =
     prompt(
@@ -990,7 +2477,73 @@ function editStudent(uid) {
       student.name
     );
 
+
   if (!name) return;
+
+
+  const username =
+    prompt(
+      "Student Username:",
+      student.username
+    );
+
+
+  if (!username) return;
+
+
+  const cleanUsername =
+    username
+      .trim()
+      .toLowerCase();
+
+
+  const duplicate =
+    students.some(
+      item =>
+        item.uid !== uid &&
+        item.username &&
+        item.username.toLowerCase() ===
+        cleanUsername
+    );
+
+
+  if (duplicate) {
+
+    alert(
+      "Username already exists."
+    );
+
+    return;
+
+  }
+
+
+  const changePassword =
+    confirm(
+      "Do you want to change the student's password?"
+    );
+
+
+  let password =
+    student.password;
+
+
+  if (changePassword) {
+
+    const newPassword =
+      prompt(
+        "Enter New Password:"
+      );
+
+
+    if (!newPassword) return;
+
+
+    password =
+      newPassword.trim();
+
+  }
+
 
   const className =
     prompt(
@@ -998,7 +2551,9 @@ function editStudent(uid) {
       student.className
     );
 
+
   if (!className) return;
+
 
   const batch =
     prompt(
@@ -1006,7 +2561,9 @@ function editStudent(uid) {
       student.batch
     );
 
+
   if (!batch) return;
+
 
   const phone =
     prompt(
@@ -1014,7 +2571,9 @@ function editStudent(uid) {
       student.phone
     );
 
+
   if (!phone) return;
+
 
   const fees =
     Number(
@@ -1024,7 +2583,12 @@ function editStudent(uid) {
       )
     );
 
-  if (isNaN(fees)) return;
+
+  if (
+    isNaN(fees) ||
+    fees < 0
+  ) return;
+
 
   const paid =
     Number(
@@ -1034,43 +2598,103 @@ function editStudent(uid) {
       )
     );
 
-  if (isNaN(paid)) return;
 
-  student.name = name.trim();
-  student.className = className.trim();
-  student.batch = batch.trim();
-  student.phone = phone.trim();
-  student.fees = fees;
-  student.paid = paid;
+  if (
+    isNaN(paid) ||
+    paid < 0 ||
+    paid > fees
+  ) {
 
-  saveStudents(students);
+    alert(
+      "Invalid paid amount."
+    );
+
+    return;
+
+  }
+
+
+  student.name =
+    name.trim();
+
+
+  student.username =
+    cleanUsername;
+
+
+  student.password =
+    password;
+
+
+  student.className =
+    className.trim();
+
+
+  student.batch =
+    batch.trim();
+
+
+  student.phone =
+    phone.trim();
+
+
+  student.fees =
+    fees;
+
+
+  student.paid =
+    paid;
+
+
+  saveStudents(
+    students
+  );
+
 
   renderStudents();
 
-  alert("Student updated successfully! ✅");
+
+  alert(
+    "Student updated successfully! ✅"
+  );
+
 }
 
 
+/* =========================================================
+   DELETE STUDENT
+========================================================= */
+
 function deleteStudent(uid) {
 
-  const role =
-    localStorage.getItem("cms_role");
+  if (
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
+  ) {
 
-  if (role !== "admin") {
     alert(
       "Only Admin can delete students."
     );
+
     return;
+
   }
 
-  const students = getStudents();
+
+  const students =
+    getStudents();
+
 
   const student =
     students.find(
-      item => item.uid === uid
+      item =>
+        item.uid === uid
     );
 
+
   if (!student) return;
+
 
   if (
     !confirm(
@@ -1078,15 +2702,22 @@ function deleteStudent(uid) {
     )
   ) return;
 
+
   saveStudents(
     students.filter(
-      item => item.uid !== uid
+      item =>
+        item.uid !== uid
     )
   );
 
+
   renderStudents();
 
-  alert("Student deleted successfully.");
+
+  alert(
+    "Student deleted successfully."
+  );
+
 }
 
 
@@ -1096,27 +2727,39 @@ function deleteStudent(uid) {
 
 function teachersPage() {
 
-  const role =
-    localStorage.getItem("cms_role");
+  if (
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
+  ) {
 
-  if (role !== "admin") {
-    alert("Only Admin can manage teachers.");
+    alert(
+      "Only Admin can manage teachers."
+    );
+
     return;
+
   }
 
-  document.getElementById("view").innerHTML = `
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
 
     <div class="topbar">
 
       <div>
 
-        <h1>Teachers</h1>
+        <h1>
+          Teachers
+        </h1>
 
         <p class="muted">
           Manage teaching staff
         </p>
 
       </div>
+
 
       <button
         class="primary"
@@ -1136,62 +2779,95 @@ function teachersPage() {
         <thead>
 
           <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Subject</th>
-            <th>Batch</th>
-            <th>Actions</th>
+
+            <th>
+              ID
+            </th>
+
+            <th>
+              Name
+            </th>
+
+            <th>
+              Subject
+            </th>
+
+            <th>
+              Batch
+            </th>
+
+            <th>
+              Actions
+            </th>
+
           </tr>
 
         </thead>
+
 
         <tbody id="teacherTable"></tbody>
 
       </table>
 
     </div>
+
   `;
 
+
   renderTeachers();
+
 }
 
 
 function renderTeachers() {
 
   const table =
-    document.getElementById("teacherTable");
+    document.getElementById(
+      "teacherTable"
+    );
+
 
   if (!table) return;
 
-  const teachers = getTeachers();
+
+  const teachers =
+    getTeachers();
+
 
   table.innerHTML =
     teachers.map(teacher => `
 
       <tr>
 
-        <td>${escapeHTML(teacher.id)}</td>
+        <td>
+          ${escapeHTML(teacher.id)}
+        </td>
 
-        <td>${escapeHTML(teacher.name)}</td>
+        <td>
+          ${escapeHTML(teacher.name)}
+        </td>
 
-        <td>${escapeHTML(teacher.subject)}</td>
+        <td>
+          ${escapeHTML(teacher.subject)}
+        </td>
 
-        <td>${escapeHTML(teacher.batch)}</td>
+        <td>
+          ${escapeHTML(teacher.batch)}
+        </td>
 
         <td>
 
           <button
             class="action-btn"
             onclick="editTeacher('${teacher.id}')"
-            title="Edit Teacher"
           >
             ✏️
           </button>
 
+
           <button
             class="action-btn"
             onclick="deleteTeacher('${teacher.id}')"
-            title="Delete Teacher"
           >
             🗑️
           </button>
@@ -1201,47 +2877,73 @@ function renderTeachers() {
       </tr>
 
     `).join("");
+
 }
 
 
 function addTeacher() {
 
   if (
-    localStorage.getItem("cms_role") !==
-    "admin"
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
   ) {
-    alert("Only Admin can add teachers.");
+
+    alert(
+      "Only Admin can add teachers."
+    );
+
     return;
+
   }
 
-  const teachers = getTeachers();
+
+  const teachers =
+    getTeachers();
+
 
   const id =
     prompt(
       "Enter Teacher ID:",
       "T" +
-      String(teachers.length + 1).padStart(3, "0")
+      String(
+        teachers.length + 1
+      ).padStart(3, "0")
     );
 
+
   if (!id) return;
+
 
   const cleanId =
     id.trim().toUpperCase();
 
+
   if (
     teachers.some(
       teacher =>
-        teacher.id.toUpperCase() === cleanId
+        teacher.id.toUpperCase() ===
+        cleanId
     )
   ) {
-    alert("Teacher ID already exists.");
+
+    alert(
+      "Teacher ID already exists."
+    );
+
     return;
+
   }
 
+
   const name =
-    prompt("Enter Teacher Name:");
+    prompt(
+      "Enter Teacher Name:"
+    );
+
 
   if (!name) return;
+
 
   const subject =
     prompt(
@@ -1249,7 +2951,9 @@ function addTeacher() {
       "Physics"
     );
 
+
   if (!subject) return;
+
 
   const batch =
     prompt(
@@ -1257,41 +2961,72 @@ function addTeacher() {
       "Class 12 A"
     );
 
+
   if (!batch) return;
 
+
   teachers.push({
-    id: cleanId,
-    name: name.trim(),
-    subject: subject.trim(),
-    batch: batch.trim()
+
+    id:
+      cleanId,
+
+    name:
+      name.trim(),
+
+    subject:
+      subject.trim(),
+
+    batch:
+      batch.trim()
+
   });
 
-  saveTeachers(teachers);
+
+  saveTeachers(
+    teachers
+  );
+
 
   renderTeachers();
 
-  alert("Teacher added successfully! ✅");
+
+  alert(
+    "Teacher added successfully! ✅"
+  );
+
 }
 
 
 function editTeacher(id) {
 
   if (
-    localStorage.getItem("cms_role") !==
-    "admin"
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
   ) {
-    alert("Only Admin can edit teachers.");
+
+    alert(
+      "Only Admin can edit teachers."
+    );
+
     return;
+
   }
 
-  const teachers = getTeachers();
+
+  const teachers =
+    getTeachers();
+
 
   const teacher =
     teachers.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
 
+
   if (!teacher) return;
+
 
   const name =
     prompt(
@@ -1299,7 +3034,9 @@ function editTeacher(id) {
       teacher.name
     );
 
+
   if (!name) return;
+
 
   const subject =
     prompt(
@@ -1307,7 +3044,9 @@ function editTeacher(id) {
       teacher.subject
     );
 
+
   if (!subject) return;
+
 
   const batch =
     prompt(
@@ -1315,38 +3054,67 @@ function editTeacher(id) {
       teacher.batch
     );
 
+
   if (!batch) return;
 
-  teacher.name = name.trim();
-  teacher.subject = subject.trim();
-  teacher.batch = batch.trim();
 
-  saveTeachers(teachers);
+  teacher.name =
+    name.trim();
+
+
+  teacher.subject =
+    subject.trim();
+
+
+  teacher.batch =
+    batch.trim();
+
+
+  saveTeachers(
+    teachers
+  );
+
 
   renderTeachers();
 
-  alert("Teacher updated successfully! ✅");
+
+  alert(
+    "Teacher updated successfully! ✅"
+  );
+
 }
 
 
 function deleteTeacher(id) {
 
   if (
-    localStorage.getItem("cms_role") !==
-    "admin"
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
   ) {
-    alert("Only Admin can delete teachers.");
+
+    alert(
+      "Only Admin can delete teachers."
+    );
+
     return;
+
   }
 
-  const teachers = getTeachers();
+
+  const teachers =
+    getTeachers();
+
 
   const teacher =
     teachers.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
 
+
   if (!teacher) return;
+
 
   if (
     !confirm(
@@ -1354,15 +3122,22 @@ function deleteTeacher(id) {
     )
   ) return;
 
+
   saveTeachers(
     teachers.filter(
-      item => item.id !== id
+      item =>
+        item.id !== id
     )
   );
 
+
   renderTeachers();
 
-  alert("Teacher deleted successfully.");
+
+  alert(
+    "Teacher deleted successfully."
+  );
+
 }
 
 
@@ -1373,41 +3148,46 @@ function deleteTeacher(id) {
 function testsPage() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
 
-  document.getElementById("view").innerHTML = `
+
+  if (role === "student") {
+
+    studentResultsPage();
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
 
     <div class="topbar">
 
       <div>
 
         <h1>
-          ${
-            role === "student"
-              ? "Results"
-              : "Tests & Results"
-          }
+          Tests & Results
         </h1>
 
         <p class="muted">
-          Manage tests, marks, attendance and rankings
+          Manage tests and student results
         </p>
 
       </div>
 
-      ${
-        role !== "student"
-          ? `
-            <button
-              class="primary"
-              onclick="addTest()"
-              style="width:auto;margin-top:0"
-            >
-              ➕ Create Test
-            </button>
-          `
-          : ""
-      }
+
+      <button
+        class="primary"
+        onclick="addTest()"
+        style="width:auto;margin-top:0"
+      >
+        ➕ Create Test
+      </button>
 
     </div>
 
@@ -1419,17 +3199,27 @@ function testsPage() {
         <thead>
 
           <tr>
+
             <th>ID</th>
+
             <th>Test</th>
+
             <th>Subject</th>
+
             <th>Date</th>
-            <th>Total Marks</th>
+
+            <th>Total</th>
+
             <th>Question Paper</th>
+
             <th>Solution</th>
+
             <th>Actions</th>
+
           </tr>
 
         </thead>
+
 
         <tbody id="testTable"></tbody>
 
@@ -1439,38 +3229,55 @@ function testsPage() {
 
 
     <div id="testDetails"></div>
+
   `;
 
+
   renderTests();
+
 }
 
 
 function renderTests() {
 
   const table =
-    document.getElementById("testTable");
+    document.getElementById(
+      "testTable"
+    );
+
 
   if (!table) return;
 
-  const role =
-    localStorage.getItem("cms_role");
 
-  const tests = getTests();
+  const tests =
+    getTests();
+
 
   table.innerHTML =
     tests.map(test => `
 
       <tr>
 
-        <td>${escapeHTML(test.id)}</td>
+        <td>
+          ${escapeHTML(test.id)}
+        </td>
 
-        <td>${escapeHTML(test.name)}</td>
+        <td>
+          ${escapeHTML(test.name)}
+        </td>
 
-        <td>${escapeHTML(test.subject)}</td>
+        <td>
+          ${escapeHTML(test.subject)}
+        </td>
 
-        <td>${escapeHTML(test.date)}</td>
+        <td>
+          ${escapeHTML(test.date)}
+        </td>
 
-        <td>${Number(test.total || 0)}</td>
+        <td>
+          ${Number(test.total || 0)}
+        </td>
+
 
         <td>
 
@@ -1480,15 +3287,19 @@ function renderTests() {
                 <a
                   href="${escapeHTML(test.questionPaper)}"
                   target="_blank"
-                  rel="noopener"
                 >
                   📄 Open
                 </a>
               `
-              : `<span class="muted">Not added</span>`
+              : `
+                <span class="muted">
+                  Not added
+                </span>
+              `
           }
 
         </td>
+
 
         <td>
 
@@ -1498,97 +3309,126 @@ function renderTests() {
                 <a
                   href="${escapeHTML(test.solution)}"
                   target="_blank"
-                  rel="noopener"
                 >
                   ✅ Open
                 </a>
               `
-              : `<span class="muted">Not added</span>`
+              : `
+                <span class="muted">
+                  Not added
+                </span>
+              `
           }
 
         </td>
+
 
         <td>
 
           <button
             class="action-btn"
             onclick="viewTest('${test.id}')"
-            title="View Students"
           >
             👁️
           </button>
 
-          ${
-            role !== "student"
-              ? `
-                <button
-                  class="action-btn"
-                  onclick="editTest('${test.id}')"
-                  title="Edit Test"
-                >
-                  ✏️
-                </button>
 
-                <button
-                  class="action-btn"
-                  onclick="deleteTest('${test.id}')"
-                  title="Delete Test"
-                >
-                  🗑️
-                </button>
-              `
-              : ""
-          }
+          <button
+            class="action-btn"
+            onclick="editTest('${test.id}')"
+          >
+            ✏️
+          </button>
+
+
+          <button
+            class="action-btn"
+            onclick="deleteTest('${test.id}')"
+          >
+            🗑️
+          </button>
 
         </td>
 
       </tr>
 
     `).join("");
+
 }
 
+
+/* =========================================================
+   ADD TEST
+========================================================= */
 
 function addTest() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
+
 
   if (
     role !== "admin" &&
     role !== "teacher"
   ) {
-    alert("Only Admin and Teacher can create tests.");
+
+    alert(
+      "Only Admin and Teacher can create tests."
+    );
+
     return;
+
   }
 
-  const tests = getTests();
+
+  const tests =
+    getTests();
+
 
   const id =
     prompt(
       "Enter Test ID:",
       "TEST" +
-      String(tests.length + 1).padStart(3, "0")
+      String(
+        tests.length + 1
+      ).padStart(3, "0")
     );
 
+
   if (!id) return;
+
 
   const cleanId =
     id.trim().toUpperCase();
 
+
   if (
     tests.some(
       test =>
-        test.id.toUpperCase() === cleanId
+        test.id.toUpperCase() ===
+        cleanId
     )
   ) {
-    alert("Test ID already exists.");
+
+    alert(
+      "Test ID already exists."
+    );
+
     return;
+
   }
 
+
   const name =
-    prompt("Enter Test Name:");
+    prompt(
+      "Enter Test Name:"
+    );
+
 
   if (!name) return;
+
 
   const subject =
     prompt(
@@ -1596,7 +3436,9 @@ function addTest() {
       "Physics"
     );
 
+
   if (!subject) return;
+
 
   const date =
     prompt(
@@ -1604,7 +3446,9 @@ function addTest() {
       today()
     );
 
+
   if (!date) return;
+
 
   const total =
     Number(
@@ -1614,13 +3458,20 @@ function addTest() {
       )
     );
 
+
   if (
     isNaN(total) ||
     total <= 0
   ) {
-    alert("Enter valid total marks.");
+
+    alert(
+      "Enter valid total marks."
+    );
+
     return;
+
   }
+
 
   const questionPaper =
     prompt(
@@ -1628,23 +3479,30 @@ function addTest() {
       ""
     );
 
+
   const solution =
     prompt(
       "Paste Solution URL (optional):",
       ""
     );
 
+
   tests.push({
 
-    id: cleanId,
+    id:
+      cleanId,
 
-    name: name.trim(),
+    name:
+      name.trim(),
 
-    subject: subject.trim(),
+    subject:
+      subject.trim(),
 
-    date: date.trim(),
+    date:
+      date.trim(),
 
-    total: total,
+    total:
+      total,
 
     questionPaper:
       questionPaper
@@ -1656,39 +3514,46 @@ function addTest() {
         ? solution.trim()
         : "",
 
-    results: {}
+    results:
+      {}
 
   });
 
-  saveTests(tests);
+
+  saveTests(
+    tests
+  );
+
 
   testsPage();
 
-  alert("Test created successfully! ✅");
+
+  alert(
+    "Test created successfully! ✅"
+  );
+
 }
 
 
+/* =========================================================
+   EDIT TEST
+========================================================= */
+
 function editTest(id) {
 
-  const role =
-    localStorage.getItem("cms_role");
+  const tests =
+    getTests();
 
-  if (
-    role !== "admin" &&
-    role !== "teacher"
-  ) {
-    alert("Only Admin and Teacher can edit tests.");
-    return;
-  }
-
-  const tests = getTests();
 
   const test =
     tests.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
 
+
   if (!test) return;
+
 
   const name =
     prompt(
@@ -1696,7 +3561,9 @@ function editTest(id) {
       test.name
     );
 
+
   if (!name) return;
+
 
   const subject =
     prompt(
@@ -1704,7 +3571,9 @@ function editTest(id) {
       test.subject
     );
 
+
   if (!subject) return;
+
 
   const date =
     prompt(
@@ -1712,7 +3581,9 @@ function editTest(id) {
       test.date
     );
 
+
   if (!date) return;
+
 
   const total =
     Number(
@@ -1722,13 +3593,20 @@ function editTest(id) {
       )
     );
 
+
   if (
     isNaN(total) ||
     total <= 0
   ) {
-    alert("Enter valid total marks.");
+
+    alert(
+      "Enter valid total marks."
+    );
+
     return;
+
   }
+
 
   const questionPaper =
     prompt(
@@ -1736,56 +3614,96 @@ function editTest(id) {
       test.questionPaper || ""
     );
 
+
   const solution =
     prompt(
       "Solution URL:",
       test.solution || ""
     );
 
-  test.name = name.trim();
-  test.subject = subject.trim();
-  test.date = date.trim();
-  test.total = total;
+
+  test.name =
+    name.trim();
+
+
+  test.subject =
+    subject.trim();
+
+
+  test.date =
+    date.trim();
+
+
+  test.total =
+    total;
+
 
   test.questionPaper =
     questionPaper
       ? questionPaper.trim()
       : "";
 
+
   test.solution =
     solution
       ? solution.trim()
       : "";
 
-  saveTests(tests);
+
+  saveTests(
+    tests
+  );
+
 
   testsPage();
 
-  alert("Test updated successfully! ✅");
+
+  alert(
+    "Test updated successfully! ✅"
+  );
+
 }
 
+
+/* =========================================================
+   DELETE TEST
+========================================================= */
 
 function deleteTest(id) {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
+
 
   if (
     role !== "admin" &&
     role !== "teacher"
   ) {
-    alert("Only Admin and Teacher can delete tests.");
+
+    alert(
+      "You do not have permission."
+    );
+
     return;
+
   }
 
-  const tests = getTests();
+
+  const tests =
+    getTests();
+
 
   const test =
     tests.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
 
+
   if (!test) return;
+
 
   if (
     !confirm(
@@ -1793,46 +3711,60 @@ function deleteTest(id) {
     )
   ) return;
 
+
   saveTests(
     tests.filter(
-      item => item.id !== id
+      item =>
+        item.id !== id
     )
   );
 
+
   testsPage();
 
-  alert("Test deleted successfully.");
+
+  alert(
+    "Test deleted successfully."
+  );
+
 }
 
 
 /* =========================================================
-   TEST DETAILS
+   VIEW TEST
 ========================================================= */
 
 function viewTest(id) {
 
-  const tests = getTests();
+  const tests =
+    getTests();
+
 
   const test =
     tests.find(
-      item => item.id === id
+      item =>
+        item.id === id
     );
+
 
   if (!test) return;
 
-  if (!test.results) {
-    test.results = {};
-  }
-
-  const students = getStudents();
 
   const details =
-    document.getElementById("testDetails");
+    document.getElementById(
+      "testDetails"
+    );
+
 
   if (!details) return;
 
-  const role =
-    localStorage.getItem("cms_role");
+
+  if (!test.results) {
+
+    test.results = {};
+
+  }
+
 
   details.innerHTML = `
 
@@ -1847,41 +3779,51 @@ function viewTest(id) {
           </h1>
 
           <p class="muted">
+
             ${escapeHTML(test.subject)}
+
             |
+
             ${escapeHTML(test.date)}
+
             |
-            Total: ${test.total}
+
+            Total:
+            ${test.total}
+
           </p>
 
         </div>
 
-        ${
-          role !== "student"
-            ? `
-              <button
-                class="primary"
-                onclick="saveTestResults('${test.id}')"
-                style="width:auto;margin-top:0"
-              >
-                💾 Save Results
-              </button>
-            `
-            : ""
-        }
+
+        <button
+          class="primary"
+          onclick="saveTestResults('${test.id}')"
+          style="width:auto;margin-top:0"
+        >
+          💾 Save Results
+        </button>
 
       </div>
 
 
       <div class="card">
 
-        <h2>📄 Study Material</h2>
+        <h2>
+          📄 Study Material
+        </h2>
+
 
         <div class="form-grid">
 
           <div>
 
-            <p><b>Question Paper</b></p>
+            <p>
+              <b>
+                Question Paper
+              </b>
+            </p>
+
 
             ${
               test.questionPaper
@@ -1905,7 +3847,12 @@ function viewTest(id) {
 
           <div>
 
-            <p><b>Solution</b></p>
+            <p>
+              <b>
+                Solution
+              </b>
+            </p>
+
 
             ${
               test.solution
@@ -1938,20 +3885,51 @@ function viewTest(id) {
           <thead>
 
             <tr>
-              <th>Rank</th>
-              <th>Student ID</th>
-              <th>Student</th>
-              <th>Class</th>
-              <th>Batch</th>
-              <th>Attendance</th>
-              <th>Marks</th>
-              <th>Percentage</th>
-              <th>Average %</th>
+
+              <th>
+                Rank
+              </th>
+
+              <th>
+                Student ID
+              </th>
+
+              <th>
+                Student
+              </th>
+
+              <th>
+                Class
+              </th>
+
+              <th>
+                Batch
+              </th>
+
+              <th>
+                Attendance
+              </th>
+
+              <th>
+                Marks
+              </th>
+
+              <th>
+                Percentage
+              </th>
+
+              <th>
+                Average %
+              </th>
+
             </tr>
 
           </thead>
 
-          <tbody id="testStudentTable"></tbody>
+
+          <tbody
+            id="testStudentTable"
+          ></tbody>
 
         </table>
 
@@ -1964,14 +3942,17 @@ function viewTest(id) {
       ></div>
 
     </div>
+
   `;
 
+
   renderTestStudents(test);
+
 }
 
 
 /* =========================================================
-   TEST STUDENTS + RANKING
+   RENDER TEST STUDENTS
 ========================================================= */
 
 function renderTestStudents(test) {
@@ -1981,31 +3962,40 @@ function renderTestStudents(test) {
       "testStudentTable"
     );
 
+
   const summary =
     document.getElementById(
       "testSummary"
     );
 
+
   if (!table) return;
 
-  const students = getStudents();
-  const tests = getTests();
 
-  const role =
-    localStorage.getItem("cms_role");
+  const students =
+    getStudents();
+
+
+  const tests =
+    getTests();
 
 
   const stats =
     students.map(student => {
 
       let totalPercentage = 0;
+
       let count = 0;
+
 
       tests.forEach(item => {
 
         const result =
           item.results &&
-          item.results[student.uid];
+          item.results[
+            student.uid
+          ];
+
 
         if (
           result &&
@@ -2014,21 +4004,21 @@ function renderTestStudents(test) {
           result.marks !== undefined
         ) {
 
-          const percentage =
+          totalPercentage +=
             Number(result.marks) /
             Number(item.total || 1) *
             100;
 
-          totalPercentage += percentage;
           count++;
 
         }
 
       });
 
+
       return {
 
-        student: student,
+        student,
 
         average:
           count > 0
@@ -2042,31 +4032,24 @@ function renderTestStudents(test) {
 
   stats.sort(
     (a, b) =>
-      b.average - a.average
+      b.average -
+      a.average
   );
 
 
   const rankMap = {};
 
-  let rank = 0;
-  let previousAverage = null;
 
-  stats.forEach((item, index) => {
+  stats.forEach(
+    (item, index) => {
 
-    if (
-      previousAverage === null ||
-      item.average !== previousAverage
-    ) {
-      rank = index + 1;
+      rankMap[
+        item.student.uid
+      ] =
+        index + 1;
+
     }
-
-    rankMap[
-      item.student.uid
-    ] = rank;
-
-    previousAverage =
-      item.average;
-  });
+  );
 
 
   table.innerHTML =
@@ -2074,8 +4057,12 @@ function renderTestStudents(test) {
 
       const result =
         test.results &&
-        test.results[student.uid]
-          ? test.results[student.uid]
+        test.results[
+          student.uid
+        ]
+          ? test.results[
+              student.uid
+            ]
           : {
               marks: "",
               present: true
@@ -2089,15 +4076,14 @@ function renderTestStudents(test) {
 
 
       const percentage =
-        marks !== "" &&
-        Number(test.total) > 0
+        marks !== ""
           ? Number(marks) /
             Number(test.total) *
             100
           : 0;
 
 
-      const studentStat =
+      const stat =
         stats.find(
           item =>
             item.student.uid ===
@@ -2106,13 +4092,9 @@ function renderTestStudents(test) {
 
 
       const average =
-        studentStat
-          ? studentStat.average
+        stat
+          ? stat.average
           : 0;
-
-
-      const editable =
-        role !== "student";
 
 
       return `
@@ -2120,9 +4102,7 @@ function renderTestStudents(test) {
         <tr>
 
           <td>
-            <b>
-              #${rankMap[student.uid]}
-            </b>
+            #${rankMap[student.uid]}
           </td>
 
           <td>
@@ -2143,84 +4123,67 @@ function renderTestStudents(test) {
 
           <td>
 
-            ${
-              editable
-                ? `
-                  <select
-                    id="present_${student.uid}"
-                  >
+            <select
+              id="present_${student.uid}"
+            >
 
-                    <option
-                      value="present"
-                      ${
-                        result.present !== false
-                          ? "selected"
-                          : ""
-                      }
-                    >
-                      🟢 Present
-                    </option>
+              <option
+                value="present"
+                ${
+                  result.present !== false
+                    ? "selected"
+                    : ""
+                }
+              >
+                🟢 Present
+              </option>
 
-                    <option
-                      value="absent"
-                      ${
-                        result.present === false
-                          ? "selected"
-                          : ""
-                      }
-                    >
-                      🔴 Absent
-                    </option>
 
-                  </select>
-                `
-                : (
-                    result.present === false
-                      ? "🔴 Absent"
-                      : "🟢 Present"
-                  )
-            }
+              <option
+                value="absent"
+                ${
+                  result.present === false
+                    ? "selected"
+                    : ""
+                }
+              >
+                🔴 Absent
+              </option>
+
+            </select>
 
           </td>
+
 
           <td>
 
-            ${
-              editable
-                ? `
-                  <input
-                    type="number"
-                    id="marks_${student.uid}"
-                    value="${escapeHTML(marks)}"
-                    min="0"
-                    max="${Number(test.total)}"
-                    placeholder="Marks"
-                    style="width:90px"
-                    ${
-                      result.present === false
-                        ? "disabled"
-                        : ""
-                    }
-                    oninput="
-                      updateCurrentPercentage(
-                        '${student.uid}',
-                        '${test.id}'
-                      )
-                    "
-                  >
-                `
-                : (
-                    result.present === false
-                      ? "-"
-                      : marks === ""
-                        ? "-"
-                        : marks
-                  )
-            }
+            <input
+              type="number"
+              id="marks_${student.uid}"
+              value="${escapeHTML(marks)}"
+              min="0"
+              max="${Number(test.total)}"
+              placeholder="Marks"
+              style="width:90px"
+              ${
+                result.present === false
+                  ? "disabled"
+                  : ""
+              }
+              oninput="
+                updateCurrentPercentage(
+                  '${student.uid}',
+                  '${test.id}'
+                )
+              "
+            >
 
           </td>
 
-          <td id="percentage_${student.uid}">
+
+          <td
+            id="percentage_${student.uid}"
+          >
 
             ${
               marks !== "" &&
@@ -2231,76 +4194,71 @@ function renderTestStudents(test) {
 
           </td>
 
+
           <td>
+
             <b>
               ${average.toFixed(2)}%
             </b>
+
           </td>
 
         </tr>
+
       `;
 
     }).join("");
 
 
-  if (editable) {
+  students.forEach(student => {
 
-    students.forEach(student => {
+    const select =
+      document.getElementById(
+        `present_${student.uid}`
+      );
 
-      const select =
-        document.getElementById(
-          `present_${student.uid}`
-        );
 
-      if (!select) return;
+    if (!select) return;
 
-      select.onchange = function() {
+
+    select.onchange =
+      function() {
 
         const input =
           document.getElementById(
             `marks_${student.uid}`
           );
 
+
         const output =
           document.getElementById(
             `percentage_${student.uid}`
           );
 
-        if (this.value === "absent") {
+
+        if (
+          this.value ===
+          "absent"
+        ) {
 
           input.value = "";
-          input.disabled = true;
-          output.innerHTML = "-";
+
+          input.disabled =
+            true;
+
+          output.innerHTML =
+            "-";
 
         } else {
 
-          input.disabled = false;
+          input.disabled =
+            false;
 
         }
 
       };
 
-    });
-
-  }
-
-
-  const presentCount =
-    students.filter(student => {
-
-      const result =
-        test.results &&
-        test.results[student.uid];
-
-      return !result ||
-        result.present !== false;
-
-    }).length;
-
-
-  const absentCount =
-    students.length -
-    presentCount;
+  });
 
 
   const marksEntered =
@@ -2308,17 +4266,23 @@ function renderTestStudents(test) {
 
       const result =
         test.results &&
-        test.results[student.uid];
+        test.results[
+          student.uid
+        ];
 
-      return result &&
+
+      return (
+        result &&
         result.present !== false &&
         result.marks !== "" &&
-        result.marks !== undefined;
+        result.marks !== undefined
+      );
 
     });
 
 
   let totalPercentage = 0;
+
 
   marksEntered.forEach(student => {
 
@@ -2326,6 +4290,7 @@ function renderTestStudents(test) {
       test.results[
         student.uid
       ];
+
 
     totalPercentage +=
       Number(result.marks) /
@@ -2335,7 +4300,7 @@ function renderTestStudents(test) {
   });
 
 
-  const testAverage =
+  const average =
     marksEntered.length > 0
       ? totalPercentage /
         marksEntered.length
@@ -2350,6 +4315,7 @@ function renderTestStudents(test) {
         📊 Test Summary
       </h2>
 
+
       <div class="stats-grid">
 
         <div class="stat-card">
@@ -2360,48 +4326,12 @@ function renderTestStudents(test) {
 
           <div>
 
-            <p>Total Students</p>
+            <p>
+              Students
+            </p>
 
             <h2>
               ${students.length}
-            </h2>
-
-          </div>
-
-        </div>
-
-
-        <div class="stat-card">
-
-          <div class="stat-icon">
-            🟢
-          </div>
-
-          <div>
-
-            <p>Present</p>
-
-            <h2>
-              ${presentCount}
-            </h2>
-
-          </div>
-
-        </div>
-
-
-        <div class="stat-card">
-
-          <div class="stat-icon">
-            🔴
-          </div>
-
-          <div>
-
-            <p>Absent</p>
-
-            <h2>
-              ${absentCount}
             </h2>
 
           </div>
@@ -2417,7 +4347,9 @@ function renderTestStudents(test) {
 
           <div>
 
-            <p>Marks Entered</p>
+            <p>
+              Marks Entered
+            </p>
 
             <h2>
               ${marksEntered.length}
@@ -2436,10 +4368,12 @@ function renderTestStudents(test) {
 
           <div>
 
-            <p>Test Average</p>
+            <p>
+              Test Average
+            </p>
 
             <h2>
-              ${testAverage.toFixed(2)}%
+              ${average.toFixed(2)}%
             </h2>
 
           </div>
@@ -2448,14 +4382,10 @@ function renderTestStudents(test) {
 
       </div>
 
-
-      <p class="muted">
-        🏆 Ranking is calculated automatically
-        according to average percentage across tests.
-      </p>
-
     `;
+
   }
+
 }
 
 
@@ -2468,51 +4398,78 @@ function updateCurrentPercentage(
   testId
 ) {
 
-  const tests = getTests();
+  const tests =
+    getTests();
+
 
   const test =
     tests.find(
-      item => item.id === testId
+      item =>
+        item.id === testId
     );
 
+
   if (!test) return;
+
 
   const input =
     document.getElementById(
       `marks_${studentUid}`
     );
 
+
   const output =
     document.getElementById(
       `percentage_${studentUid}`
     );
 
-  if (!input || !output) return;
 
-  if (input.value === "") {
-    output.innerHTML = "-";
+  if (
+    !input ||
+    !output
+  ) return;
+
+
+  if (
+    input.value === ""
+  ) {
+
+    output.innerHTML =
+      "-";
+
     return;
+
   }
+
 
   const marks =
     Number(input.value);
+
 
   if (
     isNaN(marks) ||
     marks < 0 ||
     marks > Number(test.total)
   ) {
-    output.innerHTML = "Invalid";
+
+    output.innerHTML =
+      "Invalid";
+
     return;
+
   }
+
 
   const percentage =
     marks /
     Number(test.total) *
     100;
 
+
   output.innerHTML =
-    percentage.toFixed(2) + "%";
+    percentage.toFixed(2) +
+    "%";
+
 }
 
 
@@ -2522,33 +4479,30 @@ function updateCurrentPercentage(
 
 function saveTestResults(testId) {
 
-  const role =
-    localStorage.getItem("cms_role");
+  const tests =
+    getTests();
 
-  if (
-    role !== "admin" &&
-    role !== "teacher"
-  ) {
-    alert(
-      "Only Admin and Teacher can save results."
-    );
-    return;
-  }
-
-  const tests = getTests();
 
   const test =
     tests.find(
-      item => item.id === testId
+      item =>
+        item.id === testId
     );
+
 
   if (!test) return;
 
-  const students = getStudents();
+
+  const students =
+    getStudents();
+
 
   if (!test.results) {
+
     test.results = {};
+
   }
+
 
   students.forEach(student => {
 
@@ -2557,50 +4511,71 @@ function saveTestResults(testId) {
         `present_${student.uid}`
       );
 
+
     const input =
       document.getElementById(
         `marks_${student.uid}`
       );
 
-    if (!select || !input) return;
+
+    if (
+      !select ||
+      !input
+    ) return;
+
 
     const present =
-      select.value === "present";
+      select.value ===
+      "present";
+
 
     const marks =
       input.value;
+
 
     if (!present) {
 
       test.results[
         student.uid
       ] = {
+
         present: false,
+
         marks: ""
+
       };
 
       return;
+
     }
+
 
     if (marks === "") {
 
       test.results[
         student.uid
       ] = {
+
         present: true,
+
         marks: ""
+
       };
 
       return;
+
     }
+
 
     const numericMarks =
       Number(marks);
 
+
     if (
       isNaN(numericMarks) ||
       numericMarks < 0 ||
-      numericMarks > Number(test.total)
+      numericMarks >
+        Number(test.total)
     ) {
 
       alert(
@@ -2608,7 +4583,9 @@ function saveTestResults(testId) {
       );
 
       return;
+
     }
+
 
     test.results[
       student.uid
@@ -2616,19 +4593,361 @@ function saveTestResults(testId) {
 
       present: true,
 
-      marks: numericMarks
+      marks:
+        numericMarks
 
     };
 
   });
 
-  saveTests(tests);
+
+  saveTests(
+    tests
+  );
+
 
   viewTest(testId);
+
 
   alert(
     "Test results saved successfully! ✅"
   );
+
+}
+
+
+/* =========================================================
+   STUDENT RESULTS
+========================================================= */
+
+function studentResultsPage() {
+
+  const student =
+    getCurrentStudent();
+
+
+  if (!student) {
+
+    logout();
+
+    return;
+
+  }
+
+
+  const tests =
+    getTests()
+      .slice()
+      .reverse();
+
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
+
+    <div class="topbar">
+
+      <div>
+
+        <h1>
+          📊 My Results
+        </h1>
+
+        <p class="muted">
+          Your personal test performance
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          📈
+        </div>
+
+        <div>
+
+          <p>
+            Average
+          </p>
+
+          <h2>
+            ${getStudentAverage(
+              student.uid
+            ).toFixed(2)}%
+          </h2>
+
+        </div>
+
+      </div>
+
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          🏆
+        </div>
+
+        <div>
+
+          <p>
+            Rank
+          </p>
+
+          <h2>
+            #${getStudentRank(
+              student.uid
+            )}
+          </h2>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Test
+            </th>
+
+            <th>
+              Subject
+            </th>
+
+            <th>
+              Date
+            </th>
+
+            <th>
+              Marks
+            </th>
+
+            <th>
+              Percentage
+            </th>
+
+            <th>
+              Attendance
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          ${
+            tests.length === 0
+
+              ? `
+
+                <tr>
+
+                  <td
+                    colspan="6"
+                    style="text-align:center"
+                  >
+                    No tests available.
+                  </td>
+
+                </tr>
+
+              `
+
+              : tests.map(test => {
+
+                  const result =
+                    test.results &&
+                    test.results[
+                      student.uid
+                    ];
+
+
+                  if (!result) {
+
+                    return `
+
+                      <tr>
+
+                        <td>
+                          ${escapeHTML(test.name)}
+                        </td>
+
+                        <td>
+                          ${escapeHTML(test.subject)}
+                        </td>
+
+                        <td>
+                          ${escapeHTML(test.date)}
+                        </td>
+
+                        <td>
+                          -
+                        </td>
+
+                        <td>
+                          -
+                        </td>
+
+                        <td>
+                          Not Attempted
+                        </td>
+
+                      </tr>
+
+                    `;
+
+                  }
+
+
+                  if (
+                    result.present ===
+                    false
+                  ) {
+
+                    return `
+
+                      <tr>
+
+                        <td>
+                          ${escapeHTML(test.name)}
+                        </td>
+
+                        <td>
+                          ${escapeHTML(test.subject)}
+                        </td>
+
+                        <td>
+                          ${escapeHTML(test.date)}
+                        </td>
+
+                        <td>
+                          -
+                        </td>
+
+                        <td>
+                          -
+                        </td>
+
+                        <td>
+                          🔴 Absent
+                        </td>
+
+                      </tr>
+
+                    `;
+
+                  }
+
+
+                  if (
+                    result.marks === "" ||
+                    result.marks === undefined
+                  ) {
+
+                    return `
+
+                      <tr>
+
+                        <td>
+                          ${escapeHTML(test.name)}
+                        </td>
+
+                        <td>
+                          ${escapeHTML(test.subject)}
+                        </td>
+
+                        <td>
+                          ${escapeHTML(test.date)}
+                        </td>
+
+                        <td>
+                          -
+                        </td>
+
+                        <td>
+                          Result Pending
+                        </td>
+
+                        <td>
+                          🟢 Present
+                        </td>
+
+                      </tr>
+
+                    `;
+
+                  }
+
+
+                  const percentage =
+                    Number(result.marks) /
+                    Number(test.total || 1) *
+                    100;
+
+
+                  return `
+
+                    <tr>
+
+                      <td>
+                        ${escapeHTML(test.name)}
+                      </td>
+
+                      <td>
+                        ${escapeHTML(test.subject)}
+                      </td>
+
+                      <td>
+                        ${escapeHTML(test.date)}
+                      </td>
+
+                      <td>
+                        ${result.marks}
+                        /
+                        ${test.total}
+                      </td>
+
+                      <td>
+                        <b>
+                          ${percentage.toFixed(2)}%
+                        </b>
+                      </td>
+
+                      <td>
+                        🟢 Present
+                      </td>
+
+                    </tr>
+
+                  `;
+
+              }).join("")
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  `;
+
 }
 
 
@@ -2639,15 +4958,31 @@ function saveTestResults(testId) {
 function attendancePage() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
 
-  document.getElementById("view").innerHTML = `
+
+  if (role === "student") {
+
+    studentAttendancePage();
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
 
     <div class="topbar">
 
       <div>
 
-        <h1>Attendance</h1>
+        <h1>
+          Attendance
+        </h1>
 
         <p class="muted">
           Manage student attendance
@@ -2658,68 +4993,68 @@ function attendancePage() {
     </div>
 
 
-    ${
-      role !== "student"
-        ? `
-          <div class="card">
+    <div class="card">
 
-            <h2>
-              📅 Mark Attendance
-            </h2>
-
-            <div class="form-grid">
-
-              <input
-                type="date"
-                id="attendanceDate"
-                value="${today()}"
-              >
-
-              <select id="attendanceStudent">
-
-                ${getStudents().map(student => `
-
-                  <option
-                    value="${escapeHTML(student.uid)}"
-                  >
-                    ${escapeHTML(student.name)}
-                  </option>
-
-                `).join("")}
-
-              </select>
+      <h2>
+        📅 Mark Attendance
+      </h2>
 
 
-              <select id="attendanceStatus">
+      <div class="form-grid">
 
-                <option value="Present">
-                  Present
-                </option>
-
-                <option value="Absent">
-                  Absent
-                </option>
-
-                <option value="Late">
-                  Late
-                </option>
-
-              </select>
+        <input
+          type="date"
+          id="attendanceDate"
+          value="${today()}"
+        >
 
 
-              <button
-                class="primary"
-                onclick="markAttendance()"
-              >
-                Save Attendance
-              </button>
+        <select
+          id="attendanceStudent"
+        >
 
-            </div>
+          ${getStudents().map(student => `
 
-          </div>
-        `
-        : ""
-    }
+            <option
+              value="${escapeHTML(student.uid)}"
+            >
+              ${escapeHTML(student.name)}
+            </option>
+
+          `).join("")}
+
+        </select>
+
+
+        <select
+          id="attendanceStatus"
+        >
+
+          <option value="Present">
+            Present
+          </option>
+
+          <option value="Absent">
+            Absent
+          </option>
+
+          <option value="Late">
+            Late
+          </option>
+
+        </select>
+
+
+        <button
+          class="primary"
+          onclick="markAttendance()"
+        >
+          Save Attendance
+        </button>
+
+      </div>
+
+    </div>
 
 
     <div class="table-wrap">
@@ -2729,86 +5064,302 @@ function attendancePage() {
         <thead>
 
           <tr>
-            <th>Date</th>
-            <th>Student</th>
-            <th>Status</th>
+
+            <th>
+              Date
+            </th>
+
+            <th>
+              Student
+            </th>
+
+            <th>
+              Status
+            </th>
+
             ${
               role === "admin"
                 ? "<th>Action</th>"
                 : ""
             }
+
           </tr>
 
         </thead>
 
-        <tbody id="attendanceTable"></tbody>
+
+        <tbody
+          id="attendanceTable"
+        ></tbody>
 
       </table>
 
     </div>
+
   `;
 
+
   renderAttendance();
+
 }
 
+
+/* =========================================================
+   STUDENT ATTENDANCE
+========================================================= */
+
+function studentAttendancePage() {
+
+  const student =
+    getCurrentStudent();
+
+
+  if (!student) {
+
+    logout();
+
+    return;
+
+  }
+
+
+  const records =
+    getAttendance()
+      .filter(
+        record =>
+          record.studentUid ===
+          student.uid
+      )
+      .slice()
+      .reverse();
+
+
+  const percentage =
+    getStudentAttendancePercentage(
+      student.uid
+    );
+
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
+
+    <div class="topbar">
+
+      <div>
+
+        <h1>
+          📅 My Attendance
+        </h1>
+
+        <p class="muted">
+          Your attendance record
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+
+        <div class="stat-icon">
+          📅
+        </div>
+
+        <div>
+
+          <p>
+            Attendance Percentage
+          </p>
+
+          <h2>
+            ${percentage.toFixed(2)}%
+          </h2>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+
+            <th>
+              Date
+            </th>
+
+            <th>
+              Status
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody>
+
+          ${
+            records.length === 0
+
+              ? `
+
+                <tr>
+
+                  <td
+                    colspan="2"
+                    style="text-align:center"
+                  >
+                    No attendance records yet.
+                  </td>
+
+                </tr>
+
+              `
+
+              : records.map(record => `
+
+                  <tr>
+
+                    <td>
+                      ${escapeHTML(record.date)}
+                    </td>
+
+                    <td>
+                      ${
+                        record.status ===
+                        "Present"
+                          ? "🟢 Present"
+                          : record.status ===
+                            "Late"
+                            ? "🟡 Late"
+                            : "🔴 Absent"
+                      }
+                    </td>
+
+                  </tr>
+
+                `).join("")
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================================================
+   MARK ATTENDANCE
+========================================================= */
 
 function markAttendance() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
+
 
   if (
     role !== "admin" &&
     role !== "teacher"
   ) {
+
     alert(
       "Only Admin and Teacher can mark attendance."
     );
+
     return;
+
   }
+
 
   const date =
     document.getElementById(
       "attendanceDate"
     ).value;
 
+
   const studentUid =
     document.getElementById(
       "attendanceStudent"
     ).value;
+
 
   const status =
     document.getElementById(
       "attendanceStatus"
     ).value;
 
-  if (!date || !studentUid) {
-    alert("Please fill all fields.");
+
+  if (
+    !date ||
+    !studentUid
+  ) {
+
+    alert(
+      "Please fill all fields."
+    );
+
     return;
+
   }
+
 
   const attendance =
     getAttendance();
 
+
   attendance.push({
 
-    id: makeUID("attendance"),
+    id:
+      makeUID("attendance"),
 
-    date: date,
+    date:
+      date,
 
-    studentUid: studentUid,
+    studentUid:
+      studentUid,
 
-    status: status
+    status:
+      status
 
   });
 
-  saveAttendance(attendance);
+
+  saveAttendance(
+    attendance
+  );
+
 
   renderAttendance();
 
-  alert("Attendance saved! ✅");
+
+  alert(
+    "Attendance saved! ✅"
+  );
+
 }
 
+
+/* =========================================================
+   RENDER ATTENDANCE
+========================================================= */
 
 function renderAttendance() {
 
@@ -2817,108 +5368,122 @@ function renderAttendance() {
       "attendanceTable"
     );
 
+
   if (!table) return;
 
-  const records = getAttendance();
-  const students = getStudents();
-
-  const role =
-    localStorage.getItem("cms_role");
-
-  if (records.length === 0) {
-
-    table.innerHTML = `
-
-      <tr>
-
-        <td
-          colspan="${role === "admin" ? 4 : 3}"
-          style="text-align:center"
-        >
-          No attendance records yet.
-        </td>
-
-      </tr>
-    `;
-
-    return;
-  }
-
-  table.innerHTML =
-    records.slice().reverse().map(record => {
-
-      const student =
-        students.find(
-          item =>
-            item.uid ===
-            record.studentUid
-        );
-
-      return `
-
-        <tr>
-
-          <td>
-            ${escapeHTML(record.date)}
-          </td>
-
-          <td>
-            ${
-              student
-                ? escapeHTML(student.name)
-                : "Unknown"
-            }
-          </td>
-
-          <td>
-            ${escapeHTML(record.status)}
-          </td>
-
-          ${
-            role === "admin"
-              ? `
-                <td>
-
-                  <button
-                    class="action-btn"
-                    onclick="deleteAttendance('${record.id}')"
-                  >
-                    🗑️
-                  </button>
-
-                </td>
-              `
-              : ""
-          }
-
-        </tr>
-
-      `;
-
-    }).join("");
-}
-
-
-function deleteAttendance(id) {
-
-  if (
-    localStorage.getItem("cms_role") !==
-    "admin"
-  ) {
-    alert("Only Admin can delete attendance.");
-    return;
-  }
 
   const records =
     getAttendance();
 
+
+  const students =
+    getStudents();
+
+
+  const role =
+    localStorage.getItem(
+      "cms_role"
+    );
+
+
+  table.innerHTML =
+    records
+      .slice()
+      .reverse()
+      .map(record => {
+
+        const student =
+          students.find(
+            item =>
+              item.uid ===
+              record.studentUid
+          );
+
+
+        return `
+
+          <tr>
+
+            <td>
+              ${escapeHTML(record.date)}
+            </td>
+
+            <td>
+              ${
+                student
+                  ? escapeHTML(student.name)
+                  : "Unknown"
+              }
+            </td>
+
+            <td>
+              ${escapeHTML(record.status)}
+            </td>
+
+
+            ${
+              role === "admin"
+                ? `
+
+                  <td>
+
+                    <button
+                      class="action-btn"
+                      onclick="deleteAttendance('${record.id}')"
+                    >
+                      🗑️
+                    </button>
+
+                  </td>
+
+                `
+                : ""
+            }
+
+          </tr>
+
+        `;
+
+      }).join("");
+
+}
+
+
+/* =========================================================
+   DELETE ATTENDANCE
+========================================================= */
+
+function deleteAttendance(id) {
+
+  if (
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
+  ) {
+
+    alert(
+      "Only Admin can delete attendance."
+    );
+
+    return;
+
+  }
+
+
+  const records =
+    getAttendance();
+
+
   saveAttendance(
     records.filter(
-      item => item.id !== id
+      item =>
+        item.id !== id
     )
   );
 
+
   renderAttendance();
+
 }
 
 
@@ -2929,40 +5494,62 @@ function deleteAttendance(id) {
 function feesPage() {
 
   if (
-    localStorage.getItem("cms_role") !==
-    "admin"
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
   ) {
-    alert("Only Admin can manage fees.");
+
+    alert(
+      "Only Admin can manage fees."
+    );
+
     return;
+
   }
 
-  const students = getStudents();
+
+  const students =
+    getStudents();
+
 
   const collected =
     students.reduce(
       (sum, student) =>
-        sum + Number(student.paid || 0),
+        sum +
+        Number(
+          student.paid || 0
+        ),
       0
     );
+
 
   const pending =
     students.reduce(
       (sum, student) =>
         sum +
         (
-          Number(student.fees || 0) -
-          Number(student.paid || 0)
+          Number(
+            student.fees || 0
+          ) -
+          Number(
+            student.paid || 0
+          )
         ),
       0
     );
 
-  document.getElementById("view").innerHTML = `
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
 
     <div class="topbar">
 
       <div>
 
-        <h1>Fees</h1>
+        <h1>
+          Fees
+        </h1>
 
         <p class="muted">
           Track student fee payments
@@ -2983,7 +5570,9 @@ function feesPage() {
 
         <div>
 
-          <p>Total Collected</p>
+          <p>
+            Total Collected
+          </p>
 
           <h2>
             ${money(collected)}
@@ -3002,7 +5591,9 @@ function feesPage() {
 
         <div>
 
-          <p>Total Pending</p>
+          <p>
+            Total Pending
+          </p>
 
           <h2>
             ${money(pending)}
@@ -3021,13 +5612,18 @@ function feesPage() {
         💳 Collect Fee
       </h2>
 
+
       <div class="form-grid">
 
-        <select id="feeStudent">
+        <select
+          id="feeStudent"
+        >
 
           ${students.map(student => `
 
-            <option value="${escapeHTML(student.uid)}">
+            <option
+              value="${escapeHTML(student.uid)}"
+            >
               ${escapeHTML(student.name)}
             </option>
 
@@ -3063,14 +5659,31 @@ function feesPage() {
         <thead>
 
           <tr>
-            <th>ID</th>
-            <th>Student</th>
-            <th>Total Fees</th>
-            <th>Paid</th>
-            <th>Pending</th>
+
+            <th>
+              ID
+            </th>
+
+            <th>
+              Student
+            </th>
+
+            <th>
+              Total Fees
+            </th>
+
+            <th>
+              Paid
+            </th>
+
+            <th>
+              Pending
+            </th>
+
           </tr>
 
         </thead>
+
 
         <tbody>
 
@@ -3110,24 +5723,38 @@ function feesPage() {
       </table>
 
     </div>
+
   `;
+
 }
 
+
+/* =========================================================
+   COLLECT FEE
+========================================================= */
 
 function collectFee() {
 
   if (
-    localStorage.getItem("cms_role") !==
-    "admin"
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
   ) {
-    alert("Only Admin can collect fees.");
+
+    alert(
+      "Only Admin can collect fees."
+    );
+
     return;
+
   }
+
 
   const studentUid =
     document.getElementById(
       "feeStudent"
     ).value;
+
 
   const amount =
     Number(
@@ -3136,64 +5763,103 @@ function collectFee() {
       ).value
     );
 
+
   if (
     !amount ||
     amount <= 0
   ) {
+
     alert(
       "Enter a valid payment amount."
     );
+
     return;
+
   }
 
-  const students = getStudents();
+
+  const students =
+    getStudents();
+
 
   const student =
     students.find(
       item =>
-        item.uid === studentUid
+        item.uid ===
+        studentUid
     );
+
 
   if (!student) return;
 
-  const pending =
-    Number(student.fees || 0) -
-    Number(student.paid || 0);
 
-  if (amount > pending) {
+  const pending =
+    Number(
+      student.fees || 0
+    ) -
+    Number(
+      student.paid || 0
+    );
+
+
+  if (
+    amount > pending
+  ) {
+
     alert(
       "Payment cannot be greater than pending fees."
     );
+
     return;
+
   }
 
+
   student.paid =
-    Number(student.paid || 0) +
+    Number(
+      student.paid || 0
+    ) +
     amount;
 
-  saveStudents(students);
 
-  const fees = getFees();
+  saveStudents(
+    students
+  );
+
+
+  const fees =
+    getFees();
+
 
   fees.push({
 
-    id: makeUID("fee"),
+    id:
+      makeUID("fee"),
 
-    studentUid: studentUid,
+    studentUid:
+      studentUid,
 
-    amount: amount,
+    amount:
+      amount,
 
-    date: today()
+    date:
+      today()
 
   });
 
-  saveFees(fees);
+
+  saveFees(
+    fees
+  );
+
 
   feesPage();
+
 
   alert(
     "Payment recorded successfully! ✅"
   );
+
 }
 
 
@@ -3204,25 +5870,34 @@ function collectFee() {
 function homeworkPage() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
 
-  document.getElementById("view").innerHTML = `
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
 
     <div class="topbar">
 
       <div>
 
-        <h1>Homework</h1>
+        <h1>
+          Homework
+        </h1>
 
         <p class="muted">
-          Manage homework assignments
+          Homework assignments
         </p>
 
       </div>
 
+
       ${
         role !== "student"
           ? `
+
             <button
               class="primary"
               onclick="addHomework()"
@@ -3230,6 +5905,7 @@ function homeworkPage() {
             >
               ➕ Add Homework
             </button>
+
           `
           : ""
       }
@@ -3238,9 +5914,12 @@ function homeworkPage() {
 
 
     <div id="homeworkList"></div>
+
   `;
 
+
   renderHomework();
+
 }
 
 
@@ -3251,29 +5930,19 @@ function renderHomework() {
       "homeworkList"
     );
 
+
   if (!container) return;
+
 
   const homework =
     getHomework();
 
-  if (homework.length === 0) {
-
-    container.innerHTML = `
-
-      <div class="card">
-
-        <p>
-          No homework available.
-        </p>
-
-      </div>
-    `;
-
-    return;
-  }
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
+
 
   container.innerHTML =
     homework.map(item => `
@@ -3285,24 +5954,38 @@ function renderHomework() {
         </h2>
 
         <p>
-          <b>Subject:</b>
+
+          <b>
+            Subject:
+          </b>
+
           ${escapeHTML(item.subject)}
+
         </p>
 
+
         <p>
-          <b>Due Date:</b>
+
+          <b>
+            Due Date:
+          </b>
+
           ${escapeHTML(item.due)}
+
         </p>
+
 
         ${
           role === "admin"
             ? `
+
               <button
                 class="action-btn"
                 onclick="deleteHomework('${item.id}')"
               >
                 🗑️ Delete
               </button>
+
             `
             : ""
         }
@@ -3310,21 +5993,31 @@ function renderHomework() {
       </div>
 
     `).join("");
+
 }
 
 
 function addHomework() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
+
 
   if (
     role !== "admin" &&
     role !== "teacher"
   ) {
-    alert("Only Admin and Teacher can add homework.");
+
+    alert(
+      "Only Admin and Teacher can add homework."
+    );
+
     return;
+
   }
+
 
   const subject =
     prompt(
@@ -3332,14 +6025,18 @@ function addHomework() {
       "Physics"
     );
 
+
   if (!subject) return;
+
 
   const title =
     prompt(
       "Enter Homework Title:"
     );
 
+
   if (!title) return;
+
 
   const due =
     prompt(
@@ -3347,45 +6044,66 @@ function addHomework() {
       today()
     );
 
+
   if (!due) return;
+
 
   const homework =
     getHomework();
 
+
   homework.push({
 
-    id: makeUID("homework"),
+    id:
+      makeUID("homework"),
 
-    subject: subject.trim(),
+    subject:
+      subject.trim(),
 
-    title: title.trim(),
+    title:
+      title.trim(),
 
-    due: due.trim()
+    due:
+      due.trim()
 
   });
 
-  saveHomework(homework);
+
+  saveHomework(
+    homework
+  );
+
 
   renderHomework();
+
 
   alert(
     "Homework added successfully! ✅"
   );
+
 }
 
 
 function deleteHomework(id) {
 
   if (
-    localStorage.getItem("cms_role") !==
-    "admin"
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
   ) {
-    alert("Only Admin can delete homework.");
+
+    alert(
+      "Only Admin can delete homework."
+    );
+
     return;
+
   }
+
 
   const homework =
     getHomework();
+
 
   if (
     !confirm(
@@ -3393,13 +6111,17 @@ function deleteHomework(id) {
     )
   ) return;
 
+
   saveHomework(
     homework.filter(
-      item => item.id !== id
+      item =>
+        item.id !== id
     )
   );
 
+
   renderHomework();
+
 }
 
 
@@ -3410,15 +6132,22 @@ function deleteHomework(id) {
 function noticesPage() {
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
 
-  document.getElementById("view").innerHTML = `
+
+  document.getElementById(
+    "view"
+  ).innerHTML = `
 
     <div class="topbar">
 
       <div>
 
-        <h1>Notices</h1>
+        <h1>
+          Notices
+        </h1>
 
         <p class="muted">
           Coaching centre notice board
@@ -3426,9 +6155,11 @@ function noticesPage() {
 
       </div>
 
+
       ${
         role === "admin"
           ? `
+
             <button
               class="primary"
               onclick="addNotice()"
@@ -3436,6 +6167,7 @@ function noticesPage() {
             >
               ➕ Add Notice
             </button>
+
           `
           : ""
       }
@@ -3444,9 +6176,12 @@ function noticesPage() {
 
 
     <div id="noticeList"></div>
+
   `;
 
+
   renderNotices();
+
 }
 
 
@@ -3457,32 +6192,24 @@ function renderNotices() {
       "noticeList"
     );
 
+
   if (!container) return;
 
+
   const notices =
-    getNotices();
+    getNotices()
+      .slice()
+      .reverse();
+
 
   const role =
-    localStorage.getItem("cms_role");
+    localStorage.getItem(
+      "cms_role"
+    );
 
-  if (notices.length === 0) {
-
-    container.innerHTML = `
-
-      <div class="card">
-
-        <p>
-          No notices available.
-        </p>
-
-      </div>
-    `;
-
-    return;
-  }
 
   container.innerHTML =
-    notices.slice().reverse().map(notice => `
+    notices.map(notice => `
 
       <div class="card">
 
@@ -3490,23 +6217,28 @@ function renderNotices() {
           📢 ${escapeHTML(notice.title)}
         </h2>
 
+
         <p>
           ${escapeHTML(notice.message)}
         </p>
+
 
         <p class="muted">
           ${escapeHTML(notice.date)}
         </p>
 
+
         ${
           role === "admin"
             ? `
+
               <button
                 class="action-btn"
                 onclick="deleteNotice('${notice.id}')"
               >
                 🗑️ Delete
               </button>
+
             `
             : ""
         }
@@ -3514,76 +6246,108 @@ function renderNotices() {
       </div>
 
     `).join("");
+
 }
 
 
 function addNotice() {
 
   if (
-    localStorage.getItem("cms_role") !==
-    "admin"
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
   ) {
-    alert("Only Admin can add notices.");
+
+    alert(
+      "Only Admin can add notices."
+    );
+
     return;
+
   }
+
 
   const title =
     prompt(
       "Enter Notice Title:"
     );
 
+
   if (!title) return;
+
 
   const message =
     prompt(
       "Enter Notice Message:"
     );
 
+
   if (!message) return;
+
 
   const notices =
     getNotices();
 
+
   notices.push({
 
-    id: makeUID("notice"),
+    id:
+      makeUID("notice"),
 
-    title: title.trim(),
+    title:
+      title.trim(),
 
-    message: message.trim(),
+    message:
+      message.trim(),
 
-    date: today()
+    date:
+      today()
 
   });
 
-  saveNotices(notices);
+
+  saveNotices(
+    notices
+  );
+
 
   renderNotices();
+
 
   alert(
     "Notice added successfully! ✅"
   );
+
 }
 
 
 function deleteNotice(id) {
 
   if (
-    localStorage.getItem("cms_role") !==
-    "admin"
+    localStorage.getItem(
+      "cms_role"
+    ) !== "admin"
   ) {
-    alert("Only Admin can delete notices.");
+
+    alert(
+      "Only Admin can delete notices."
+    );
+
     return;
+
   }
+
 
   const notices =
     getNotices();
+
 
   if (
     !confirm(
       "Delete this notice?"
     )
   ) return;
+
 
   saveNotices(
     notices.filter(
@@ -3592,7 +6356,9 @@ function deleteNotice(id) {
     )
   );
 
+
   renderNotices();
+
 }
 
 
@@ -3606,18 +6372,26 @@ function logout() {
     "cms_role"
   );
 
+
+  localStorage.removeItem(
+    "cms_student_uid"
+  );
+
+
   loginPage();
+
 }
 
 
 /* =========================================================
-   START
+   START APPLICATION
 ========================================================= */
 
 const savedRole =
   localStorage.getItem(
     "cms_role"
   );
+
 
 if (savedRole) {
 
