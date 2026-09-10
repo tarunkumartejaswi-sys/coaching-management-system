@@ -1,3 +1,12 @@
+/* =====================================================
+   COACHING MANAGEMENT SYSTEM
+   Complete Frontend Application
+===================================================== */
+
+/* =========================
+   DEFAULT DATA
+========================= */
+
 const defaultStudents = [
   {
     id: "ST001",
@@ -22,29 +31,134 @@ const defaultStudents = [
   }
 ];
 
+const defaultTeachers = [
+  {
+    id: "T001",
+    name: "Rajesh Kumar",
+    subject: "Physics",
+    batch: "Class 12 A"
+  },
+  {
+    id: "T002",
+    name: "Neha Singh",
+    subject: "Chemistry",
+    batch: "Class 12 A"
+  },
+  {
+    id: "T003",
+    name: "Amit Sharma",
+    subject: "Mathematics",
+    batch: "Class 12 B"
+  }
+];
+
+const defaultHomework = [
+  {
+    subject: "Physics",
+    title: "Electrostatics Questions",
+    batch: "Class 12 A",
+    date: "Today"
+  },
+  {
+    subject: "Chemistry",
+    title: "Organic Chemistry Revision",
+    batch: "Class 12 A",
+    date: "Yesterday"
+  },
+  {
+    subject: "Mathematics",
+    title: "Integration Practice",
+    batch: "Class 12 B",
+    date: "Yesterday"
+  }
+];
+
+const defaultNotices = [
+  {
+    title: "Monthly Test",
+    message: "Monthly test will be conducted this Saturday.",
+    date: "Today"
+  },
+  {
+    title: "Fee Reminder",
+    message: "Please complete pending fees before the 15th.",
+    date: "Yesterday"
+  }
+];
+
 /* =========================
-   STUDENT DATA
+   STORAGE HELPERS
 ========================= */
 
-function getStudents() {
-  const saved = localStorage.getItem("coaching_students");
+function getData(key, fallback) {
+  const saved = localStorage.getItem(key);
 
-  if (saved) {
-    try {
-      return JSON.parse(saved);
-    } catch (error) {
-      return [...defaultStudents];
-    }
+  if (!saved) {
+    return JSON.parse(JSON.stringify(fallback));
   }
 
-  return [...defaultStudents];
+  try {
+    return JSON.parse(saved);
+  } catch (error) {
+    return JSON.parse(JSON.stringify(fallback));
+  }
+}
+
+function saveData(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+function getStudents() {
+  return getData("coaching_students", defaultStudents);
 }
 
 function saveStudents(data) {
-  localStorage.setItem(
-    "coaching_students",
-    JSON.stringify(data)
-  );
+  saveData("coaching_students", data);
+}
+
+function getTeachers() {
+  return getData("coaching_teachers", defaultTeachers);
+}
+
+function saveTeachers(data) {
+  saveData("coaching_teachers", data);
+}
+
+function getHomework() {
+  return getData("coaching_homework", defaultHomework);
+}
+
+function saveHomework(data) {
+  saveData("coaching_homework", data);
+}
+
+function getNotices() {
+  return getData("coaching_notices", defaultNotices);
+}
+
+function saveNotices(data) {
+  saveData("coaching_notices", data);
+}
+
+/* =========================
+   HELPERS
+========================= */
+
+function escapeHTML(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+function today() {
+  return new Date().toLocaleDateString("en-IN");
+}
+
+function money(value) {
+  return "₹" + Number(value).toLocaleString("en-IN");
 }
 
 /* =========================
@@ -54,6 +168,7 @@ function saveStudents(data) {
 function loginPage() {
   document.getElementById("app").innerHTML = `
     <div class="login-page">
+
       <div class="login-card">
 
         <div class="logo">🎓</div>
@@ -74,6 +189,7 @@ function loginPage() {
               padding:13px;
               border:1px solid #d8deea;
               border-radius:12px;
+              box-sizing:border-box;
             "
           >
             <option value="admin">Admin</option>
@@ -88,7 +204,7 @@ function loginPage() {
           <input
             id="userId"
             placeholder="Enter ID"
-          />
+          >
         </div>
 
         <div class="field">
@@ -98,7 +214,7 @@ function loginPage() {
             id="password"
             type="password"
             placeholder="Enter password"
-          />
+          >
         </div>
 
         <button
@@ -109,14 +225,20 @@ function loginPage() {
         </button>
 
         <div class="demo-box">
-          <b>Demo login</b><br><br>
+          <b>Demo Login</b>
+          <br><br>
 
-          Admin: admin / 1234<br>
-          Teacher: teacher / 1234<br>
+          Admin: admin / 1234
+          <br>
+
+          Teacher: teacher / 1234
+          <br>
+
           Student: student / 1234
         </div>
 
       </div>
+
     </div>
   `;
 }
@@ -126,14 +248,17 @@ function loginPage() {
 ========================= */
 
 function login() {
-  const role =
-    document.getElementById("role").value;
+  const roleElement = document.getElementById("role");
+  const idElement = document.getElementById("userId");
+  const passwordElement = document.getElementById("password");
 
-  const id =
-    document.getElementById("userId").value.trim();
+  if (!roleElement || !idElement || !passwordElement) {
+    return;
+  }
 
-  const password =
-    document.getElementById("password").value;
+  const role = roleElement.value;
+  const id = idElement.value.trim();
+  const password = passwordElement.value;
 
   const valid =
     (role === "admin" && id === "admin") ||
@@ -141,7 +266,7 @@ function login() {
     (role === "student" && id === "student");
 
   if (!valid || password !== "1234") {
-    alert("Demo login details are incorrect.");
+    alert("Incorrect login details.");
     return;
   }
 
@@ -158,10 +283,6 @@ function login() {
 ========================= */
 
 function dashboard(role) {
-  const title =
-    role.charAt(0).toUpperCase() +
-    role.slice(1);
-
   document.getElementById("app").innerHTML = `
     <div class="layout">
 
@@ -173,19 +294,25 @@ function dashboard(role) {
 
         <div class="nav">
 
-          <button
-            onclick="showHome('${role}')"
-          >
+          <button onclick="showHome('${role}')">
             🏠 Dashboard
           </button>
 
           ${
             role !== "student"
               ? `
-                <button
-                  onclick="showStudents('${role}')"
-                >
+                <button onclick="showStudents('${role}')">
                   👨‍🎓 Students
+                </button>
+              `
+              : ""
+          }
+
+          ${
+            role === "admin"
+              ? `
+                <button onclick="showTeachers()">
+                  👨‍🏫 Teachers
                 </button>
               `
               : ""
@@ -243,7 +370,7 @@ function dashboard(role) {
           class="logout"
           onclick="logout()"
         >
-          Logout
+          🚪 Logout
         </button>
 
       </aside>
@@ -276,20 +403,19 @@ function logout() {
 ========================= */
 
 function showHome(role) {
-  const view =
-    document.getElementById("view");
+  const view = document.getElementById("view");
+
+  if (!view) return;
+
+  const students = getStudents();
 
   if (role === "admin") {
-
-    const students =
-      getStudents();
 
     view.innerHTML = `
       <div class="topbar">
 
         <div>
           <h1>Admin Dashboard</h1>
-
           <p class="muted">
             Institute overview
           </p>
@@ -308,7 +434,7 @@ function showHome(role) {
 
         <div class="card">
           <h3>Teachers</h3>
-          <strong>8</strong>
+          <strong>${getTeachers().length}</strong>
         </div>
 
         <div class="card">
@@ -324,7 +450,7 @@ function showHome(role) {
       </div>
 
       <h2 class="section-title">
-        Recent activity
+        Recent Activity
       </h2>
 
       <div class="card">
@@ -362,7 +488,7 @@ function showHome(role) {
 
         <div class="card">
           <h3>My Students</h3>
-          <strong>${getStudents().length}</strong>
+          <strong>${students.length}</strong>
         </div>
 
         <div class="card">
@@ -377,13 +503,13 @@ function showHome(role) {
 
         <div class="card">
           <h3>Homework</h3>
-          <strong>6</strong>
+          <strong>${getHomework().length}</strong>
         </div>
 
       </div>
 
       <h2 class="section-title">
-        Students needing attention
+        Students Needing Attention
       </h2>
 
       <div class="card">
@@ -399,7 +525,7 @@ function showHome(role) {
 
         <div>
           <h1>
-            Good morning, Rahul 👋
+            Good Morning, Rahul 👋
           </h1>
 
           <p class="muted">
@@ -436,7 +562,7 @@ function showHome(role) {
       </div>
 
       <h2 class="section-title">
-        Latest tests
+        Latest Tests
       </h2>
 
       <div class="table-wrap">
@@ -478,7 +604,7 @@ function showHome(role) {
 
             <tr>
               <td>Unit Test 3</td>
-              <td>Maths</td>
+              <td>Mathematics</td>
               <td>91%</td>
               <td>
                 <span class="badge">
@@ -501,12 +627,9 @@ function showHome(role) {
 ========================= */
 
 function showStudents(role) {
-
-  const view =
-    document.getElementById("view");
+  const view = document.getElementById("view");
 
   view.innerHTML = `
-
     <div class="topbar">
 
       <div>
@@ -542,7 +665,7 @@ function showStudents(role) {
           border-radius:12px;
           box-sizing:border-box;
         "
-      />
+      >
 
     </div>
 
@@ -551,7 +674,6 @@ function showStudents(role) {
       <table>
 
         <thead>
-
           <tr>
             <th>ID</th>
             <th>Name</th>
@@ -560,11 +682,9 @@ function showStudents(role) {
             <th>Average</th>
             <th>Actions</th>
           </tr>
-
         </thead>
 
-        <tbody id="studentTable">
-        </tbody>
+        <tbody id="studentTable"></tbody>
 
       </table>
 
@@ -579,42 +699,26 @@ function showStudents(role) {
 ========================= */
 
 function renderStudents() {
-
-  const table =
-    document.getElementById(
-      "studentTable"
-    );
+  const table = document.getElementById("studentTable");
 
   if (!table) return;
 
   const searchBox =
-    document.getElementById(
-      "studentSearch"
+    document.getElementById("studentSearch");
+
+  const search = searchBox
+    ? searchBox.value.toLowerCase()
+    : "";
+
+  const data = getStudents().filter(student => {
+
+    return (
+      String(student.id).toLowerCase().includes(search) ||
+      String(student.name).toLowerCase().includes(search) ||
+      String(student.batch).toLowerCase().includes(search)
     );
 
-  const search =
-    searchBox
-      ? searchBox.value.toLowerCase()
-      : "";
-
-  const data =
-    getStudents().filter(student => {
-
-      return (
-        student.id
-          .toLowerCase()
-          .includes(search) ||
-
-        student.name
-          .toLowerCase()
-          .includes(search) ||
-
-        student.batch
-          .toLowerCase()
-          .includes(search)
-      );
-
-    });
+  });
 
   if (data.length === 0) {
 
@@ -632,42 +736,39 @@ function renderStudents() {
     return;
   }
 
-  table.innerHTML =
-    data.map(student => `
+  table.innerHTML = data.map(student => `
 
-      <tr>
+    <tr>
 
-        <td>${student.id}</td>
+      <td>${escapeHTML(student.id)}</td>
 
-        <td>${student.name}</td>
+      <td>${escapeHTML(student.name)}</td>
 
-        <td>${student.batch}</td>
+      <td>${escapeHTML(student.batch)}</td>
 
-        <td>${student.attendance}</td>
+      <td>${escapeHTML(student.attendance)}</td>
 
-        <td>${student.average}</td>
+      <td>${escapeHTML(student.average)}</td>
 
-        <td>
+      <td>
 
-          <button
-            onclick="editStudent('${student.id}')"
-            title="Edit"
-          >
-            ✏️
-          </button>
+        <button
+          onclick="editStudent('${escapeHTML(student.id)}')"
+        >
+          ✏️
+        </button>
 
-          <button
-            onclick="deleteStudent('${student.id}')"
-            title="Delete"
-          >
-            🗑️
-          </button>
+        <button
+          onclick="deleteStudent('${escapeHTML(student.id)}')"
+        >
+          🗑️
+        </button>
 
-        </td>
+      </td>
 
-      </tr>
+    </tr>
 
-    `).join("");
+  `).join("");
 }
 
 /* =========================
@@ -675,17 +776,13 @@ function renderStudents() {
 ========================= */
 
 function addStudent() {
-
-  const id =
-    prompt("Enter Student ID:");
+  const id = prompt("Enter Student ID:");
 
   if (!id) return;
 
-  const cleanId =
-    id.trim().toUpperCase();
+  const cleanId = id.trim().toUpperCase();
 
-  const data =
-    getStudents();
+  const data = getStudents();
 
   if (
     data.some(
@@ -693,40 +790,32 @@ function addStudent() {
         student.id.toUpperCase() === cleanId
     )
   ) {
-
-    alert(
-      "Student ID already exists."
-    );
-
+    alert("Student ID already exists.");
     return;
   }
 
-  const name =
-    prompt("Enter Student Name:");
+  const name = prompt("Enter Student Name:");
 
   if (!name) return;
 
-  const batch =
-    prompt(
-      "Enter Batch/Class:",
-      "Class 12 A"
-    );
+  const batch = prompt(
+    "Enter Batch/Class:",
+    "Class 12 A"
+  );
 
   if (!batch) return;
 
-  const attendance =
-    prompt(
-      "Enter Attendance:",
-      "0%"
-    );
+  const attendance = prompt(
+    "Enter Attendance:",
+    "0%"
+  );
 
   if (!attendance) return;
 
-  const average =
-    prompt(
-      "Enter Average:",
-      "0%"
-    );
+  const average = prompt(
+    "Enter Average:",
+    "0%"
+  );
 
   if (!average) return;
 
@@ -742,9 +831,7 @@ function addStudent() {
 
   renderStudents();
 
-  alert(
-    "Student added successfully! ✅"
-  );
+  alert("Student added successfully! ✅");
 }
 
 /* =========================
@@ -752,68 +839,52 @@ function addStudent() {
 ========================= */
 
 function editStudent(id) {
+  const data = getStudents();
 
-  const data =
-    getStudents();
-
-  const student =
-    data.find(
-      item => item.id === id
-    );
+  const student = data.find(
+    item => item.id === id
+  );
 
   if (!student) return;
 
-  const name =
-    prompt(
-      "Student Name:",
-      student.name
-    );
+  const name = prompt(
+    "Student Name:",
+    student.name
+  );
 
   if (!name) return;
 
-  const batch =
-    prompt(
-      "Batch/Class:",
-      student.batch
-    );
+  const batch = prompt(
+    "Batch/Class:",
+    student.batch
+  );
 
   if (!batch) return;
 
-  const attendance =
-    prompt(
-      "Attendance:",
-      student.attendance
-    );
+  const attendance = prompt(
+    "Attendance:",
+    student.attendance
+  );
 
   if (!attendance) return;
 
-  const average =
-    prompt(
-      "Average:",
-      student.average
-    );
+  const average = prompt(
+    "Average:",
+    student.average
+  );
 
   if (!average) return;
 
-  student.name =
-    name.trim();
-
-  student.batch =
-    batch.trim();
-
-  student.attendance =
-    attendance.trim();
-
-  student.average =
-    average.trim();
+  student.name = name.trim();
+  student.batch = batch.trim();
+  student.attendance = attendance.trim();
+  student.average = average.trim();
 
   saveStudents(data);
 
   renderStudents();
 
-  alert(
-    "Student updated successfully! ✅"
-  );
+  alert("Student updated successfully! ✅");
 }
 
 /* =========================
@@ -821,255 +892,53 @@ function editStudent(id) {
 ========================= */
 
 function deleteStudent(id) {
-
-  const student =
-    getStudents().find(
-      item => item.id === id
-    );
+  const student = getStudents().find(
+    item => item.id === id
+  );
 
   if (!student) return;
 
-  const confirmed =
-    confirm(
-      `Delete ${student.name}?`
-    );
+  const confirmed = confirm(
+    `Delete ${student.name}?`
+  );
 
   if (!confirmed) return;
 
-  const data =
-    getStudents().filter(
-      item => item.id !== id
-    );
+  const data = getStudents().filter(
+    item => item.id !== id
+  );
 
   saveStudents(data);
 
   renderStudents();
 
-  alert(
-    "Student deleted successfully."
-  );
+  alert("Student deleted successfully.");
 }
 
 /* =========================
-   TESTS
+   TEACHERS
 ========================= */
 
-function showTests(role) {
-
-  const view =
-    document.getElementById("view");
-
-  view.innerHTML = `
-    <div class="topbar">
-      <div>
-        <h1>Tests</h1>
-        <p class="muted">
-          Manage examinations and results
-        </p>
-      </div>
-    </div>
-
-    <div class="cards">
-
-      <div class="card">
-        <h3>Total Tests</h3>
-        <strong>12</strong>
-      </div>
-
-      <div class="card">
-        <h3>Upcoming</h3>
-        <strong>3</strong>
-      </div>
-
-      <div class="card">
-        <h3>Completed</h3>
-        <strong>9</strong>
-      </div>
-
-      <div class="card">
-        <h3>Average Score</h3>
-        <strong>78%</strong>
-      </div>
-
-    </div>
-
-    <h2 class="section-title">
-      Recent Tests
-    </h2>
-
-    <div class="table-wrap">
-
-      <table>
-
-        <thead>
-          <tr>
-            <th>Test</th>
-            <th>Subject</th>
-            <th>Batch</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <tr>
-            <td>Unit Test 3</td>
-            <td>Physics</td>
-            <td>Class 12 A</td>
-            <td>
-              <span class="badge">
-                Completed
-              </span>
-            </td>
-          </tr>
-
-          <tr>
-            <td>Unit Test 3</td>
-            <td>Chemistry</td>
-            <td>Class 12 A</td>
-            <td>
-              <span class="badge">
-                Completed
-              </span>
-            </td>
-          </tr>
-
-          <tr>
-            <td>Monthly Test</td>
-            <td>Mathematics</td>
-            <td>Class 12 B</td>
-            <td>
-              <span class="badge">
-                Upcoming
-              </span>
-            </td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-  `;
-}
-
-/* =========================
-   STUDENT RESULTS
-========================= */
-
-function showResults() {
-
-  const view =
-    document.getElementById("view");
+function showTeachers() {
+  const view = document.getElementById("view");
 
   view.innerHTML = `
     <div class="topbar">
 
       <div>
-        <h1>My Results</h1>
+        <h1>Teachers</h1>
 
         <p class="muted">
-          Your test performance
+          Manage teaching staff
         </p>
       </div>
 
-    </div>
-
-    <div class="cards">
-
-      <div class="card">
-        <h3>Average</h3>
-        <strong>82%</strong>
-      </div>
-
-      <div class="card">
-        <h3>Best Score</h3>
-        <strong>91%</strong>
-      </div>
-
-      <div class="card">
-        <h3>Tests Taken</h3>
-        <strong>12</strong>
-      </div>
-
-      <div class="card">
-        <h3>Rank</h3>
-        <strong>#7</strong>
-      </div>
-
-    </div>
-
-    <h2 class="section-title">
-      Test Results
-    </h2>
-
-    <div class="table-wrap">
-
-      <table>
-
-        <thead>
-          <tr>
-            <th>Test</th>
-            <th>Subject</th>
-            <th>Score</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <tr>
-            <td>Unit Test 3</td>
-            <td>Physics</td>
-            <td>82%</td>
-            <td>Completed</td>
-          </tr>
-
-          <tr>
-            <td>Unit Test 3</td>
-            <td>Chemistry</td>
-            <td>76%</td>
-            <td>Completed</td>
-          </tr>
-
-          <tr>
-            <td>Unit Test 3</td>
-            <td>Maths</td>
-            <td>91%</td>
-            <td>Completed</td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-  `;
-}
-
-/* =========================
-   ATTENDANCE
-========================= */
-
-function showAttendance(role) {
-
-  const view =
-    document.getElementById("view");
-
-  const data =
-    getStudents();
-
-  view.innerHTML = `
-
-    <div class="topbar">
-
-      <div>
-        <h1>Attendance</h1>
-
-        <p class="muted">
-          Student attendance records
-        </p>
-      </div>
+      <button
+        class="primary"
+        onclick="addTeacher()"
+      >
+        ➕ Add Teacher
+      </button>
 
     </div>
 
@@ -1081,111 +950,163 @@ function showAttendance(role) {
           <tr>
             <th>ID</th>
             <th>Name</th>
+            <th>Subject</th>
             <th>Batch</th>
-            <th>Attendance</th>
+            <th>Action</th>
           </tr>
         </thead>
 
-        <tbody>
-
-          ${data.map(student => `
-
-            <tr>
-
-              <td>${student.id}</td>
-
-              <td>${student.name}</td>
-
-              <td>${student.batch}</td>
-
-              <td>${student.attendance}</td>
-
-            </tr>
-
-          `).join("")}
-
-        </tbody>
+        <tbody id="teacherTable"></tbody>
 
       </table>
 
     </div>
   `;
+
+  renderTeachers();
+}
+
+function renderTeachers() {
+  const table = document.getElementById("teacherTable");
+
+  if (!table) return;
+
+  const data = getTeachers();
+
+  table.innerHTML = data.map(teacher => `
+
+    <tr>
+
+      <td>${escapeHTML(teacher.id)}</td>
+
+      <td>${escapeHTML(teacher.name)}</td>
+
+      <td>${escapeHTML(teacher.subject)}</td>
+
+      <td>${escapeHTML(teacher.batch)}</td>
+
+      <td>
+        <button
+          onclick="deleteTeacher('${escapeHTML(teacher.id)}')"
+        >
+          🗑️
+        </button>
+      </td>
+
+    </tr>
+
+  `).join("");
+}
+
+function addTeacher() {
+  const id = prompt("Enter Teacher ID:");
+
+  if (!id) return;
+
+  const cleanId = id.trim().toUpperCase();
+
+  const data = getTeachers();
+
+  if (
+    data.some(
+      teacher => teacher.id === cleanId
+    )
+  ) {
+    alert("Teacher ID already exists.");
+    return;
+  }
+
+  const name = prompt("Enter Teacher Name:");
+
+  if (!name) return;
+
+  const subject = prompt(
+    "Enter Subject:",
+    "Physics"
+  );
+
+  if (!subject) return;
+
+  const batch = prompt(
+    "Enter Batch:",
+    "Class 12 A"
+  );
+
+  if (!batch) return;
+
+  data.push({
+    id: cleanId,
+    name: name.trim(),
+    subject: subject.trim(),
+    batch: batch.trim()
+  });
+
+  saveTeachers(data);
+
+  renderTeachers();
+
+  alert("Teacher added successfully! ✅");
+}
+
+function deleteTeacher(id) {
+  const teacher = getTeachers().find(
+    item => item.id === id
+  );
+
+  if (!teacher) return;
+
+  if (!confirm(`Delete ${teacher.name}?`)) {
+    return;
+  }
+
+  const data = getTeachers().filter(
+    item => item.id !== id
+  );
+
+  saveTeachers(data);
+
+  renderTeachers();
+
+  alert("Teacher deleted successfully.");
 }
 
 /* =========================
-   MY ATTENDANCE
+   TESTS
 ========================= */
 
-function showMyAttendance() {
-
-  const view =
-    document.getElementById("view");
+function showTests(role) {
+  const view = document.getElementById("view");
 
   view.innerHTML = `
-
     <div class="topbar">
 
       <div>
-        <h1>My Attendance</h1>
+        <h1>Tests</h1>
 
         <p class="muted">
-          Your attendance record
+          Manage examinations and results
         </p>
       </div>
+
+      ${
+        role === "admin" || role === "teacher"
+          ? `
+            <button
+              class="primary"
+              onclick="createTest()"
+            >
+              ➕ Create Test
+            </button>
+          `
+          : ""
+      }
 
     </div>
 
     <div class="cards">
 
       <div class="card">
-        <h3>Overall Attendance</h3>
-        <strong>94%</strong>
-      </div>
-
-      <div class="card">
-        <h3>Present</h3>
-        <strong>94</strong>
-      </div>
-
-      <div class="card">
-        <h3>Absent</h3>
-        <strong>6</strong>
-      </div>
-
-      <div class="card">
-        <h3>Status</h3>
-        <strong>Good</strong>
-      </div>
-
-    </div>
-  `;
-}
-
-/* =========================
-   FEES
-========================= */
-
-function showFees(role) {
-
-  const view =
-    document.getElementById("view");
-
-  view.innerHTML = `
-
-    <div class="topbar">
-
-      <div>
-        <h1>Fees</h1>
-
-        <p class="muted">
-          Fee management
-        </p>
-
-      </div>
-
-    </div>
-
-    <div class="cards">
-
- 
+        <h3>Total Tests</h3>
+        <strong>12</st
+        
 
