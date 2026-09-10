@@ -1,11 +1,4 @@
-/* =====================================================
-   COACHING MANAGEMENT SYSTEM
-   Complete Frontend Application
-===================================================== */
-
-/* =========================
-   DEFAULT DATA
-========================= */
+const studentsKey = "cms_students";
 
 const defaultStudents = [
   {
@@ -31,142 +24,38 @@ const defaultStudents = [
   }
 ];
 
-const defaultTeachers = [
-  {
-    id: "T001",
-    name: "Rajesh Kumar",
-    subject: "Physics",
-    batch: "Class 12 A"
-  },
-  {
-    id: "T002",
-    name: "Neha Singh",
-    subject: "Chemistry",
-    batch: "Class 12 A"
-  },
-  {
-    id: "T003",
-    name: "Amit Sharma",
-    subject: "Mathematics",
-    batch: "Class 12 B"
-  }
-];
-
-const defaultHomework = [
-  {
-    subject: "Physics",
-    title: "Electrostatics Questions",
-    batch: "Class 12 A",
-    date: "Today"
-  },
-  {
-    subject: "Chemistry",
-    title: "Organic Chemistry Revision",
-    batch: "Class 12 A",
-    date: "Yesterday"
-  },
-  {
-    subject: "Mathematics",
-    title: "Integration Practice",
-    batch: "Class 12 B",
-    date: "Yesterday"
-  }
-];
-
-const defaultNotices = [
-  {
-    title: "Monthly Test",
-    message: "Monthly test will be conducted this Saturday.",
-    date: "Today"
-  },
-  {
-    title: "Fee Reminder",
-    message: "Please complete pending fees before the 15th.",
-    date: "Yesterday"
-  }
-];
-
-/* =========================
-   STORAGE HELPERS
-========================= */
-
-function getData(key, fallback) {
-  const saved = localStorage.getItem(key);
-
-  if (!saved) {
-    return JSON.parse(JSON.stringify(fallback));
-  }
-
-  try {
-    return JSON.parse(saved);
-  } catch (error) {
-    return JSON.parse(JSON.stringify(fallback));
-  }
-}
-
-function saveData(key, data) {
-  localStorage.setItem(key, JSON.stringify(data));
-}
-
 function getStudents() {
-  return getData("coaching_students", defaultStudents);
+  try {
+    const saved = localStorage.getItem(studentsKey);
+
+    if (saved) {
+      return JSON.parse(saved);
+    }
+  } catch (error) {
+    console.log(error);
+  }
+
+  return [...defaultStudents];
 }
 
-function saveStudents(data) {
-  saveData("coaching_students", data);
+function saveStudents(students) {
+  localStorage.setItem(
+    studentsKey,
+    JSON.stringify(students)
+  );
 }
 
-function getTeachers() {
-  return getData("coaching_teachers", defaultTeachers);
-}
-
-function saveTeachers(data) {
-  saveData("coaching_teachers", data);
-}
-
-function getHomework() {
-  return getData("coaching_homework", defaultHomework);
-}
-
-function saveHomework(data) {
-  saveData("coaching_homework", data);
-}
-
-function getNotices() {
-  return getData("coaching_notices", defaultNotices);
-}
-
-function saveNotices(data) {
-  saveData("coaching_notices", data);
+function app() {
+  return document.getElementById("app");
 }
 
 /* =========================
-   HELPERS
-========================= */
-
-function escapeHTML(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function today() {
-  return new Date().toLocaleDateString("en-IN");
-}
-
-function money(value) {
-  return "₹" + Number(value).toLocaleString("en-IN");
-}
-
-/* =========================
-   LOGIN PAGE
+   LOGIN
 ========================= */
 
 function loginPage() {
-  document.getElementById("app").innerHTML = `
+
+  app().innerHTML = `
     <div class="login-page">
 
       <div class="login-card">
@@ -180,34 +69,40 @@ function loginPage() {
         </p>
 
         <div class="field">
+
           <label>Role</label>
 
-          <select
-            id="role"
-            style="
-              width:100%;
-              padding:13px;
-              border:1px solid #d8deea;
-              border-radius:12px;
-              box-sizing:border-box;
-            "
-          >
-            <option value="admin">Admin</option>
-            <option value="teacher">Teacher</option>
-            <option value="student">Student</option>
+          <select id="role">
+
+            <option value="admin">
+              Admin
+            </option>
+
+            <option value="teacher">
+              Teacher
+            </option>
+
+            <option value="student">
+              Student
+            </option>
+
           </select>
+
         </div>
 
         <div class="field">
+
           <label>User ID</label>
 
           <input
             id="userId"
             placeholder="Enter ID"
           >
+
         </div>
 
         <div class="field">
+
           <label>Password</label>
 
           <input
@@ -215,6 +110,7 @@ function loginPage() {
             type="password"
             placeholder="Enter password"
           >
+
         </div>
 
         <button
@@ -225,16 +121,21 @@ function loginPage() {
         </button>
 
         <div class="demo-box">
+
           <b>Demo Login</b>
+
           <br><br>
 
           Admin: admin / 1234
+
           <br>
 
           Teacher: teacher / 1234
+
           <br>
 
           Student: student / 1234
+
         </div>
 
       </div>
@@ -243,47 +144,50 @@ function loginPage() {
   `;
 }
 
-/* =========================
-   LOGIN
-========================= */
-
 function login() {
-  const roleElement = document.getElementById("role");
-  const idElement = document.getElementById("userId");
-  const passwordElement = document.getElementById("password");
 
-  if (!roleElement || !idElement || !passwordElement) {
-    return;
+  const role =
+    document.getElementById("role").value;
+
+  const id =
+    document.getElementById("userId").value.trim();
+
+  const password =
+    document.getElementById("password").value;
+
+  if (
+    password === "1234" &&
+    (
+      (role === "admin" && id === "admin") ||
+      (role === "teacher" && id === "teacher") ||
+      (role === "student" && id === "student")
+    )
+  ) {
+
+    localStorage.setItem(
+      "cms_role",
+      role
+    );
+
+    dashboard(role);
+
+  } else {
+
+    alert(
+      "Incorrect login details.\n\nUse the demo credentials shown below."
+    );
+
   }
-
-  const role = roleElement.value;
-  const id = idElement.value.trim();
-  const password = passwordElement.value;
-
-  const valid =
-    (role === "admin" && id === "admin") ||
-    (role === "teacher" && id === "teacher") ||
-    (role === "student" && id === "student");
-
-  if (!valid || password !== "1234") {
-    alert("Incorrect login details.");
-    return;
-  }
-
-  localStorage.setItem(
-    "coaching_current_role",
-    role
-  );
-
-  dashboard(role);
 }
 
 /* =========================
-   MAIN DASHBOARD
+   DASHBOARD
 ========================= */
 
 function dashboard(role) {
-  document.getElementById("app").innerHTML = `
+
+  app().innerHTML = `
+
     <div class="layout">
 
       <aside class="sidebar">
@@ -294,14 +198,18 @@ function dashboard(role) {
 
         <div class="nav">
 
-          <button onclick="showHome('${role}')">
+          <button
+            onclick="home('${role}')"
+          >
             🏠 Dashboard
           </button>
 
           ${
             role !== "student"
               ? `
-                <button onclick="showStudents('${role}')">
+                <button
+                  onclick="studentsPage()"
+                >
                   👨‍🎓 Students
                 </button>
               `
@@ -311,56 +219,48 @@ function dashboard(role) {
           ${
             role === "admin"
               ? `
-                <button onclick="showTeachers()">
+                <button
+                  onclick="teachersPage()"
+                >
                   👨‍🏫 Teachers
                 </button>
               `
               : ""
           }
 
-          ${
-            role !== "student"
-              ? `
-                <button onclick="showTests('${role}')">
-                  📝 Tests
-                </button>
-              `
-              : `
-                <button onclick="showResults()">
-                  📊 My Results
-                </button>
-              `
-          }
+          <button
+            onclick="testsPage('${role}')"
+          >
+            📝 Tests
+          </button>
 
-          ${
-            role !== "student"
-              ? `
-                <button onclick="showAttendance('${role}')">
-                  📅 Attendance
-                </button>
-              `
-              : `
-                <button onclick="showMyAttendance()">
-                  📅 My Attendance
-                </button>
-              `
-          }
+          <button
+            onclick="attendancePage('${role}')"
+          >
+            📅 Attendance
+          </button>
 
           ${
             role !== "teacher"
               ? `
-                <button onclick="showFees('${role}')">
+                <button
+                  onclick="feesPage()"
+                >
                   💰 Fees
                 </button>
               `
               : ""
           }
 
-          <button onclick="showHomework('${role}')">
+          <button
+            onclick="homeworkPage('${role}')"
+          >
             📚 Homework
           </button>
 
-          <button onclick="showNotices('${role}')">
+          <button
+            onclick="noticesPage('${role}')"
+          >
             📢 Notices
           </button>
 
@@ -383,39 +283,30 @@ function dashboard(role) {
     </div>
   `;
 
-  showHome(role);
+  home(role);
 }
 
 /* =========================
-   LOGOUT
+   HOME
 ========================= */
 
-function logout() {
-  localStorage.removeItem(
-    "coaching_current_role"
-  );
+function home(role) {
 
-  loginPage();
-}
+  const view =
+    document.getElementById("view");
 
-/* =========================
-   HOME DASHBOARD
-========================= */
-
-function showHome(role) {
-  const view = document.getElementById("view");
-
-  if (!view) return;
-
-  const students = getStudents();
+  const students =
+    getStudents();
 
   if (role === "admin") {
 
     view.innerHTML = `
+
       <div class="topbar">
 
         <div>
           <h1>Admin Dashboard</h1>
+
           <p class="muted">
             Institute overview
           </p>
@@ -434,7 +325,7 @@ function showHome(role) {
 
         <div class="card">
           <h3>Teachers</h3>
-          <strong>${getTeachers().length}</strong>
+          <strong>8</strong>
         </div>
 
         <div class="card">
@@ -454,22 +345,24 @@ function showHome(role) {
       </h2>
 
       <div class="card">
-        📝 Class 12 A test results were
-        updated today.
+        📝 Class 12 A test results
+        were updated today.
       </div>
 
       <div
         class="card"
-        style="margin-top:10px"
+        style="margin-top:12px"
       >
         💰 5 students have pending
         monthly fees.
       </div>
+
     `;
 
   } else if (role === "teacher") {
 
     view.innerHTML = `
+
       <div class="topbar">
 
         <div>
@@ -503,7 +396,7 @@ function showHome(role) {
 
         <div class="card">
           <h3>Homework</h3>
-          <strong>${getHomework().length}</strong>
+          <strong>6</strong>
         </div>
 
       </div>
@@ -516,11 +409,13 @@ function showHome(role) {
         🔴 Aman Raj · Average 69%
         · Attendance 78%
       </div>
+
     `;
 
   } else {
 
     view.innerHTML = `
+
       <div class="topbar">
 
         <div>
@@ -618,6 +513,7 @@ function showHome(role) {
         </table>
 
       </div>
+
     `;
   }
 }
@@ -626,10 +522,13 @@ function showHome(role) {
    STUDENTS
 ========================= */
 
-function showStudents(role) {
-  const view = document.getElementById("view");
+function studentsPage() {
+
+  const view =
+    document.getElementById("view");
 
   view.innerHTML = `
+
     <div class="topbar">
 
       <div>
@@ -655,15 +554,14 @@ function showStudents(role) {
     >
 
       <input
-        id="studentSearch"
-        placeholder="🔍 Search by ID, name or batch..."
+        id="search"
+        placeholder="🔍 Search students..."
         oninput="renderStudents()"
         style="
           width:100%;
           padding:13px;
-          border:1px solid #d8deea;
-          border-radius:12px;
-          box-sizing:border-box;
+          border:1px solid #d5dbe5;
+          border-radius:10px;
         "
       >
 
@@ -674,6 +572,7 @@ function showStudents(role) {
       <table>
 
         <thead>
+
           <tr>
             <th>ID</th>
             <th>Name</th>
@@ -682,6 +581,7 @@ function showStudents(role) {
             <th>Average</th>
             <th>Actions</th>
           </tr>
+
         </thead>
 
         <tbody id="studentTable"></tbody>
@@ -689,77 +589,59 @@ function showStudents(role) {
       </table>
 
     </div>
+
   `;
 
   renderStudents();
 }
 
-/* =========================
-   RENDER STUDENTS
-========================= */
-
 function renderStudents() {
-  const table = document.getElementById("studentTable");
+
+  const table =
+    document.getElementById("studentTable");
 
   if (!table) return;
 
-  const searchBox =
-    document.getElementById("studentSearch");
+  const search =
+    document.getElementById("search")
+      .value
+      .toLowerCase();
 
-  const search = searchBox
-    ? searchBox.value.toLowerCase()
-    : "";
+  const students =
+    getStudents().filter(student =>
 
-  const data = getStudents().filter(student => {
+      student.id.toLowerCase().includes(search) ||
+      student.name.toLowerCase().includes(search) ||
+      student.batch.toLowerCase().includes(search)
 
-    return (
-      String(student.id).toLowerCase().includes(search) ||
-      String(student.name).toLowerCase().includes(search) ||
-      String(student.batch).toLowerCase().includes(search)
     );
 
-  });
-
-  if (data.length === 0) {
-
-    table.innerHTML = `
-      <tr>
-        <td
-          colspan="6"
-          style="text-align:center;padding:30px"
-        >
-          No students found.
-        </td>
-      </tr>
-    `;
-
-    return;
-  }
-
-  table.innerHTML = data.map(student => `
+  table.innerHTML = students.map(student => `
 
     <tr>
 
-      <td>${escapeHTML(student.id)}</td>
+      <td>${student.id}</td>
 
-      <td>${escapeHTML(student.name)}</td>
+      <td>${student.name}</td>
 
-      <td>${escapeHTML(student.batch)}</td>
+      <td>${student.batch}</td>
 
-      <td>${escapeHTML(student.attendance)}</td>
+      <td>${student.attendance}</td>
 
-      <td>${escapeHTML(student.average)}</td>
+      <td>${student.average}</td>
 
       <td>
 
         <button
-          onclick="editStudent('${escapeHTML(student.id)}')"
+          class="action-btn"
+          onclick="editStudent('${student.id}')"
         >
           ✏️
         </button>
 
         <button
-          onclick="deleteStudent('${escapeHTML(student.id)}')"
+          class="action-btn"
+          onclick="deleteStudent('${student.id}')"
         >
           🗑️
         </button>
@@ -769,176 +651,179 @@ function renderStudents() {
     </tr>
 
   `).join("");
+
+  if (students.length === 0) {
+
+    table.innerHTML = `
+      <tr>
+        <td colspan="6">
+          No students found.
+        </td>
+      </tr>
+    `;
+
+  }
 }
 
-/* =========================
-   ADD STUDENT
-========================= */
-
 function addStudent() {
-  const id = prompt("Enter Student ID:");
+
+  const id =
+    prompt("Student ID:");
 
   if (!id) return;
 
-  const cleanId = id.trim().toUpperCase();
-
-  const data = getStudents();
-
-  if (
-    data.some(
-      student =>
-        student.id.toUpperCase() === cleanId
-    )
-  ) {
-    alert("Student ID already exists.");
-    return;
-  }
-
-  const name = prompt("Enter Student Name:");
+  const name =
+    prompt("Student Name:");
 
   if (!name) return;
 
-  const batch = prompt(
-    "Enter Batch/Class:",
-    "Class 12 A"
-  );
+  const batch =
+    prompt(
+      "Batch/Class:",
+      "Class 12 A"
+    );
 
   if (!batch) return;
 
-  const attendance = prompt(
-    "Enter Attendance:",
-    "0%"
-  );
+  const attendance =
+    prompt(
+      "Attendance:",
+      "90%"
+    );
 
   if (!attendance) return;
 
-  const average = prompt(
-    "Enter Average:",
-    "0%"
-  );
+  const average =
+    prompt(
+      "Average:",
+      "80%"
+    );
 
   if (!average) return;
 
-  data.push({
-    id: cleanId,
+  const students =
+    getStudents();
+
+  students.push({
+    id: id.trim().toUpperCase(),
     name: name.trim(),
     batch: batch.trim(),
     attendance: attendance.trim(),
     average: average.trim()
   });
 
-  saveStudents(data);
+  saveStudents(students);
 
   renderStudents();
 
-  alert("Student added successfully! ✅");
+  alert(
+    "Student added successfully! ✅"
+  );
 }
 
-/* =========================
-   EDIT STUDENT
-========================= */
-
 function editStudent(id) {
-  const data = getStudents();
 
-  const student = data.find(
-    item => item.id === id
-  );
+  const students =
+    getStudents();
+
+  const student =
+    students.find(
+      s => s.id === id
+    );
 
   if (!student) return;
 
-  const name = prompt(
-    "Student Name:",
-    student.name
-  );
+  const name =
+    prompt(
+      "Student Name:",
+      student.name
+    );
 
   if (!name) return;
 
-  const batch = prompt(
-    "Batch/Class:",
-    student.batch
-  );
+  const batch =
+    prompt(
+      "Batch:",
+      student.batch
+    );
 
   if (!batch) return;
 
-  const attendance = prompt(
-    "Attendance:",
-    student.attendance
-  );
+  const attendance =
+    prompt(
+      "Attendance:",
+      student.attendance
+    );
 
   if (!attendance) return;
 
-  const average = prompt(
-    "Average:",
-    student.average
-  );
+  const average =
+    prompt(
+      "Average:",
+      student.average
+    );
 
   if (!average) return;
 
-  student.name = name.trim();
-  student.batch = batch.trim();
-  student.attendance = attendance.trim();
-  student.average = average.trim();
+  student.name = name;
+  student.batch = batch;
+  student.attendance = attendance;
+  student.average = average;
 
-  saveStudents(data);
+  saveStudents(students);
 
   renderStudents();
 
-  alert("Student updated successfully! ✅");
+  alert(
+    "Student updated! ✅"
+  );
 }
 
-/* =========================
-   DELETE STUDENT
-========================= */
-
 function deleteStudent(id) {
-  const student = getStudents().find(
-    item => item.id === id
-  );
+
+  const students =
+    getStudents();
+
+  const student =
+    students.find(
+      s => s.id === id
+    );
 
   if (!student) return;
 
-  const confirmed = confirm(
-    `Delete ${student.name}?`
-  );
+  if (
+    !confirm(
+      `Delete ${student.name}?`
+    )
+  ) return;
 
-  if (!confirmed) return;
+  const updated =
+    students.filter(
+      s => s.id !== id
+    );
 
-  const data = getStudents().filter(
-    item => item.id !== id
-  );
-
-  saveStudents(data);
+  saveStudents(updated);
 
   renderStudents();
-
-  alert("Student deleted successfully.");
 }
 
 /* =========================
    TEACHERS
 ========================= */
 
-function showTeachers() {
-  const view = document.getElementById("view");
+function teachersPage() {
 
-  view.innerHTML = `
+  document.getElementById("view").innerHTML = `
+
     <div class="topbar">
 
       <div>
         <h1>Teachers</h1>
 
         <p class="muted">
-          Manage teaching staff
+          Teaching staff
         </p>
       </div>
-
-      <button
-        class="primary"
-        onclick="addTeacher()"
-      >
-        ➕ Add Teacher
-      </button>
 
     </div>
 
@@ -947,153 +832,71 @@ function showTeachers() {
       <table>
 
         <thead>
+
           <tr>
             <th>ID</th>
             <th>Name</th>
             <th>Subject</th>
             <th>Batch</th>
-            <th>Action</th>
           </tr>
+
         </thead>
 
-        <tbody id="teacherTable"></tbody>
+        <tbody>
+
+          <tr>
+            <td>T001</td>
+            <td>Rajesh Kumar</td>
+            <td>Physics</td>
+            <td>Class 12 A</td>
+          </tr>
+
+          <tr>
+            <td>T002</td>
+            <td>Neha Singh</td>
+            <td>Chemistry</td>
+            <td>Class 12 A</td>
+          </tr>
+
+          <tr>
+            <td>T003</td>
+            <td>Amit Sharma</td>
+            <td>Mathematics</td>
+            <td>Class 12 B</td>
+          </tr>
+
+        </tbody>
 
       </table>
 
     </div>
   `;
-
-  renderTeachers();
-}
-
-function renderTeachers() {
-  const table = document.getElementById("teacherTable");
-
-  if (!table) return;
-
-  const data = getTeachers();
-
-  table.innerHTML = data.map(teacher => `
-
-    <tr>
-
-      <td>${escapeHTML(teacher.id)}</td>
-
-      <td>${escapeHTML(teacher.name)}</td>
-
-      <td>${escapeHTML(teacher.subject)}</td>
-
-      <td>${escapeHTML(teacher.batch)}</td>
-
-      <td>
-        <button
-          onclick="deleteTeacher('${escapeHTML(teacher.id)}')"
-        >
-          🗑️
-        </button>
-      </td>
-
-    </tr>
-
-  `).join("");
-}
-
-function addTeacher() {
-  const id = prompt("Enter Teacher ID:");
-
-  if (!id) return;
-
-  const cleanId = id.trim().toUpperCase();
-
-  const data = getTeachers();
-
-  if (
-    data.some(
-      teacher => teacher.id === cleanId
-    )
-  ) {
-    alert("Teacher ID already exists.");
-    return;
-  }
-
-  const name = prompt("Enter Teacher Name:");
-
-  if (!name) return;
-
-  const subject = prompt(
-    "Enter Subject:",
-    "Physics"
-  );
-
-  if (!subject) return;
-
-  const batch = prompt(
-    "Enter Batch:",
-    "Class 12 A"
-  );
-
-  if (!batch) return;
-
-  data.push({
-    id: cleanId,
-    name: name.trim(),
-    subject: subject.trim(),
-    batch: batch.trim()
-  });
-
-  saveTeachers(data);
-
-  renderTeachers();
-
-  alert("Teacher added successfully! ✅");
-}
-
-function deleteTeacher(id) {
-  const teacher = getTeachers().find(
-    item => item.id === id
-  );
-
-  if (!teacher) return;
-
-  if (!confirm(`Delete ${teacher.name}?`)) {
-    return;
-  }
-
-  const data = getTeachers().filter(
-    item => item.id !== id
-  );
-
-  saveTeachers(data);
-
-  renderTeachers();
-
-  alert("Teacher deleted successfully.");
 }
 
 /* =========================
    TESTS
 ========================= */
 
-function showTests(role) {
-  const view = document.getElementById("view");
+function testsPage(role) {
 
-  view.innerHTML = `
+  document.getElementById("view").innerHTML = `
+
     <div class="topbar">
 
       <div>
         <h1>Tests</h1>
 
         <p class="muted">
-          Manage examinations and results
+          Examinations and results
         </p>
       </div>
 
       ${
-        role === "admin" || role === "teacher"
+        role !== "student"
           ? `
             <button
               class="primary"
-              onclick="createTest()"
+              onclick="alert('Test creation will be added next.')"
             >
               ➕ Create Test
             </button>
@@ -1107,6 +910,417 @@ function showTests(role) {
 
       <div class="card">
         <h3>Total Tests</h3>
-        <strong>12</st
-        
+        <strong>12</strong>
+      </div>
 
+      <div class="card">
+        <h3>Upcoming</h3>
+        <strong>3</strong>
+      </div>
+
+      <div class="card">
+        <h3>Completed</h3>
+        <strong>9</strong>
+      </div>
+
+      <div class="card">
+        <h3>Average Score</h3>
+        <strong>78%</strong>
+      </div>
+
+    </div>
+
+    <h2 class="section-title">
+      Recent Tests
+    </h2>
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Test</th>
+            <th>Subject</th>
+            <th>Batch</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td>Unit Test 3</td>
+            <td>Physics</td>
+            <td>Class 12 A</td>
+            <td>
+              <span class="badge">
+                Completed
+              </span>
+            </td>
+          </tr>
+
+          <tr>
+            <td>Unit Test 3</td>
+            <td>Chemistry</td>
+            <td>Class 12 A</td>
+            <td>
+              <span class="badge">
+                Completed
+              </span>
+            </td>
+          </tr>
+
+          <tr>
+            <td>Monthly Test</td>
+            <td>Mathematics</td>
+            <td>Class 12 B</td>
+            <td>
+              <span class="badge">
+                Upcoming
+              </span>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `;
+}
+
+/* =========================
+   ATTENDANCE
+========================= */
+
+function attendancePage(role) {
+
+  const students =
+    getStudents();
+
+  document.getElementById("view").innerHTML = `
+
+    <div class="topbar">
+
+      <div>
+        <h1>Attendance</h1>
+
+        <p class="muted">
+          Student attendance records
+        </p>
+      </div>
+
+    </div>
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Batch</th>
+            <th>Attendance</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${
+            students.map(student => `
+
+              <tr>
+
+                <td>${student.id}</td>
+
+                <td>${student.name}</td>
+
+                <td>${student.batch}</td>
+
+                <td>${student.attendance}</td>
+
+              </tr>
+
+            `).join("")
+          }
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `;
+}
+
+/* =========================
+   FEES
+========================= */
+
+function feesPage() {
+
+  document.getElementById("view").innerHTML = `
+
+    <div class="topbar">
+
+      <div>
+        <h1>Fees</h1>
+
+        <p class="muted">
+          Fee management
+        </p>
+      </div>
+
+    </div>
+
+    <div class="cards">
+
+      <div class="card">
+        <h3>Total Fees</h3>
+        <strong>₹2.72L</strong>
+      </div>
+
+      <div class="card">
+        <h3>Collected</h3>
+        <strong>₹2.40L</strong>
+      </div>
+
+      <div class="card">
+        <h3>Pending</h3>
+        <strong>₹32K</strong>
+      </div>
+
+      <div class="card">
+        <h3>Students</h3>
+        <strong>${getStudents().length}</strong>
+      </div>
+
+    </div>
+
+    <h2 class="section-title">
+      Fee Status
+    </h2>
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Student</th>
+            <th>Batch</th>
+            <th>Fee</th>
+            <th>Status</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td>Rahul Kumar</td>
+            <td>Class 12 A</td>
+            <td>₹5,000</td>
+            <td>
+              <span class="badge">
+                Paid
+              </span>
+            </td>
+          </tr>
+
+          <tr>
+            <td>Priya Singh</td>
+            <td>Class 12 A</td>
+            <td>₹5,000</td>
+            <td>
+              <span class="badge">
+                Paid
+              </span>
+            </td>
+          </tr>
+
+          <tr>
+            <td>Aman Raj</td>
+            <td>Class 12 B</td>
+            <td>₹5,000</td>
+            <td>
+              <span class="badge">
+                Pending
+              </span>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `;
+}
+
+/* =========================
+   HOMEWORK
+========================= */
+
+function homeworkPage(role) {
+
+  document.getElementById("view").innerHTML = `
+
+    <div class="topbar">
+
+      <div>
+        <h1>Homework</h1>
+
+        <p class="muted">
+          Assignments and study work
+        </p>
+      </div>
+
+    </div>
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Subject</th>
+            <th>Homework</th>
+            <th>Batch</th>
+            <th>Status</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td>Physics</td>
+            <td>Electrostatics Questions</td>
+            <td>Class 12 A</td>
+            <td>
+              <span class="badge">
+                Active
+              </span>
+            </td>
+          </tr>
+
+          <tr>
+            <td>Chemistry</td>
+            <td>Organic Chemistry Revision</td>
+            <td>Class 12 A</td>
+            <td>
+              <span class="badge">
+                Active
+              </span>
+            </td>
+          </tr>
+
+          <tr>
+            <td>Mathematics</td>
+            <td>Integration Practice</td>
+            <td>Class 12 B</td>
+            <td>
+              <span class="badge">
+                Active
+              </span>
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `;
+}
+
+/* =========================
+   NOTICES
+========================= */
+
+function noticesPage(role) {
+
+  document.getElementById("view").innerHTML = `
+
+    <div class="topbar">
+
+      <div>
+        <h1>Notices</h1>
+
+        <p class="muted">
+          Institute announcements
+        </p>
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h3>
+        📢 Monthly Test
+      </h3>
+
+      <p>
+        Monthly test will be conducted
+        this Saturday.
+      </p>
+
+    </div>
+
+    <div
+      class="card"
+      style="margin-top:12px"
+    >
+
+      <h3>
+        📢 Fee Reminder
+      </h3>
+
+      <p>
+        Please complete pending fees
+        before the 15th.
+      </p>
+
+    </div>
+  `;
+}
+
+/* =========================
+   LOGOUT
+========================= */
+
+function logout() {
+
+  localStorage.removeItem(
+    "cms_role"
+  );
+
+  loginPage();
+}
+
+/* =========================
+   START
+========================= */
+
+const savedRole =
+  localStorage.getItem("cms_role");
+
+if (
+  savedRole === "admin" ||
+  savedRole === "teacher" ||
+  savedRole === "student"
+) {
+
+  dashboard(savedRole);
+
+} else {
+
+  loginPage();
+
+}
