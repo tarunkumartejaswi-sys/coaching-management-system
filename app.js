@@ -5,9 +5,6 @@
 
 const appRoot = document.getElementById("app");
 
-const auth = firebase.auth();
-const db = firebase.firestore();
-
 let currentUser = null;
 let currentProfile = null;
 
